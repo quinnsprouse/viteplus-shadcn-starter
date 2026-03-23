@@ -11,7 +11,7 @@ node_modules
 dist
 dist-ssr
 .output
-src/routeTree.gen.ts
+# src/routeTree.gen.ts — checked in for CI builds
 *.local
 !.claude/settings.local.json
 coverage
@@ -34,3 +34,4 @@ playwright-report
 *.njsproj
 *.sln
 *.sw?
+.vercel

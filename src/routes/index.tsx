@@ -38,7 +38,7 @@ const features: { icon: IconSvgElement; title: string; desc: string }[] = [
   {
     icon: Twotone.MagicWand01Icon,
     title: "Auto-format on every edit",
-    desc: "Claude hooks run oxfmt and typecheck after every file write. Import sorting and Tailwind class sorting happen automatically — agents never ship unformatted code.",
+    desc: "Claude hooks run oxfmt and typecheck after every file write. Import sorting and Tailwind class sorting happen automatically\u2009\u2014\u2009agents never ship unformatted code.",
   },
   {
     icon: Twotone.Target01Icon,
@@ -60,10 +60,25 @@ function useRotatingWord(words: string[], intervalMs = 2000) {
   const [index, setIndex] = useState(0);
 
   useMountEffect(() => {
-    const id = window.setInterval(() => {
-      setIndex((prev) => (prev + 1) % words.length);
-    }, intervalMs);
-    return () => window.clearInterval(id);
+    let id: number;
+
+    function start() {
+      id = window.setInterval(() => {
+        setIndex((prev) => (prev + 1) % words.length);
+      }, intervalMs);
+    }
+
+    function handleVisibility() {
+      window.clearInterval(id);
+      if (!document.hidden) start();
+    }
+
+    start();
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => {
+      window.clearInterval(id);
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
   });
 
   return words[index];
@@ -204,19 +219,8 @@ function Home() {
             <p className="mb-14 text-sm text-muted-foreground/50">What ships out of the box</p>
 
             <div className="space-y-12">
-              {features.map((f, i) => (
-                <m.div
-                  key={f.title}
-                  className="grid gap-3 sm:grid-cols-[200px_1fr] sm:gap-8"
-                  initial={skip ? false : { opacity: 0, y: 8 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: "-40px" }}
-                  transition={{
-                    duration: 0.4,
-                    delay: i * 0.04,
-                    ease: [0.25, 0.46, 0.45, 0.94],
-                  }}
-                >
+              {features.map((f) => (
+                <div key={f.title} className="grid gap-3 sm:grid-cols-[200px_1fr] sm:gap-8">
                   <div className="flex items-start gap-2.5">
                     <Icon
                       icon={f.icon}
@@ -231,7 +235,7 @@ function Home() {
                   <p className="text-[13px] leading-[1.7] text-pretty text-muted-foreground/70">
                     {f.desc}
                   </p>
-                </m.div>
+                </div>
               ))}
             </div>
           </div>
@@ -246,7 +250,7 @@ function Home() {
                 href={s.href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-[11px] text-muted-foreground/40 transition-colors hover:text-foreground"
+                className="py-2 text-[11px] text-muted-foreground/40 transition-colors hover:text-foreground"
               >
                 {s.name}
                 {i < stack.length - 1 && (

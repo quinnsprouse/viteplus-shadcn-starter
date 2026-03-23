@@ -8,7 +8,7 @@
     "build": "tsc -b && vp build --logLevel error",
     "preview": "vp preview",
     "start": "node .output/server/index.mjs",
-    "prepare": "vp config && husky",
+    "prepare": "vp config && husky && npx skills experimental_install",
     "lint": "vp lint",
     "lint:fix": "vp lint --fix",
     "fmt": "vp fmt",

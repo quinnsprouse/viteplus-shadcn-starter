@@ -12,7 +12,7 @@ Agent-ready starter kit: Vite+ + TanStack Start + React 19, with shadcn/ui (Base
 
 ## Commits
 
-Conventional Commits enforced by commitlint. `type(scope): description`
+Conventional Commits enforced by commitlint. `type(scope): description`. No Co-Authored-By trailers.
 
 ## Progressive Disclosure
 

@@ -51,7 +51,7 @@
       "WebFetch(domain:oxc.rs)",
       "WebFetch(domain:github.com)"
     ],
-    "deny": [
+    "ask": [
       "Bash(rm -rf *)",
       "Bash(git push --force*)",
       "Bash(git reset --hard*)",

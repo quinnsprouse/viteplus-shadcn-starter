@@ -17,5 +17,6 @@ export function Icon({ icon, className, size = 16, strokeWidth = 1.5, ...props }
   );
 }
 
-// Re-export commonly used icons from Pro package for convenience
+// Re-export icons from Pro packages
 export * from "@hugeicons-pro/core-stroke-rounded";
+export * as Twotone from "@hugeicons-pro/core-twotone-rounded";

@@ -34,7 +34,6 @@
       "Bash(ls*)",
       "Bash(cat*)",
       "Bash(mkdir*)",
-
       "Bash(chmod*)",
       "Bash(which*)",
       "Bash(lsof*)",
@@ -49,6 +48,28 @@
       "WebFetch(domain:nitro.build)",
       "WebFetch(domain:oxc.rs)",
       "WebFetch(domain:github.com)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "vp fmt \"$CLAUDE_FILE_PATH\" 2>/dev/null; npx tsc -b --noEmit 2>&1 | head -20 || true"
+          }
+        ]
+      },
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "vp fmt \"$CLAUDE_FILE_PATH\" 2>/dev/null; npx tsc -b --noEmit 2>&1 | head -20 || true"
+          }
+        ]
+      }
     ]
   }
 }

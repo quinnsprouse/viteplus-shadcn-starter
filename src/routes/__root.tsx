@@ -13,7 +13,7 @@ import type { ReactNode } from "react";
 import appCss from "@/styles/app.css?url";
 
 const GOOGLE_FONTS_URL =
-  "https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=JetBrains+Mono:wght@400;500&display=swap";
+  "https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=JetBrains+Mono:wght@400;500&family=Yellowtail&display=swap";
 
 export const Route = createRootRoute({
   head: () => ({
@@ -21,11 +21,11 @@ export const Route = createRootRoute({
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { name: "theme-color", content: "#ffffff" },
-      { title: "Vite+ Starter — Agent-Ready React with TanStack Start" },
+      { title: "Rodeo — Wrangle Your AI Agents" },
       {
         name: "description",
         content:
-          "A full-stack React starter with agent guardrails built in. Vite+, TanStack Start, shadcn/ui, and Tailwind v4.",
+          "An agent-ready React starter with guardrails for AI agents. Built on Vite+, TanStack Start, shadcn/ui, and Tailwind v4.",
       },
     ],
     links: [

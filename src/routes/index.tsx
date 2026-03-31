@@ -1,10 +1,11 @@
 import type { IconSvgElement } from "@hugeicons/react";
 import { createFileRoute } from "@tanstack/react-router";
+import { Calligraph } from "calligraph";
 import { LazyMotion, domAnimation, m, useReducedMotion } from "motion/react";
+import { Penflow } from "penflow/react";
 import { useState } from "react";
-import { TextMorph } from "torph/react";
 
-import { Icon, Twotone, Github01Icon, ArrowRight01Icon, ShadcnIcon } from "@/components/icons";
+import { Icon, Twotone, Github01Icon, ArrowRight01Icon } from "@/components/icons";
 import { Snippet } from "@/components/ui/snippet";
 import { useMountEffect } from "@/hooks/use-mount-effect";
 
@@ -95,82 +96,42 @@ function Home() {
         {/* Hero — fills viewport */}
         <section className="flex min-h-dvh flex-col justify-center px-6 sm:px-10">
           <div className="mx-auto w-full max-w-2xl">
-            {/* Stack pill */}
-            <m.div
-              className="mb-8 flex w-fit items-center gap-1.5 rounded-full border border-border/60 bg-muted/40 px-3 py-1.5"
-              initial={skip ? false : { opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
-            >
-              <a
-                href="https://viteplus.dev"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 rounded-sm px-1 py-0.5 text-xs font-medium text-foreground/70 transition-colors hover:text-foreground"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="14"
-                  height="14"
-                  fill="none"
-                  viewBox="0 0 48 46"
-                  aria-hidden="true"
-                >
-                  <path
-                    fill="#863bff"
-                    d="M25.946 44.938c-.664.845-2.021.375-2.021-.698V33.937a2.26 2.26 0 0 0-2.262-2.262H10.287c-.92 0-1.456-1.04-.92-1.788l7.48-10.471c1.07-1.497 0-3.578-1.842-3.578H1.237c-.92 0-1.456-1.04-.92-1.788L10.013.474c.214-.297.556-.474.92-.474h28.894c.92 0 1.456 1.04.92 1.788l-7.48 10.471c-1.07 1.498 0 3.579 1.842 3.579h11.377c.943 0 1.473 1.088.89 1.83L25.947 44.94z"
-                  />
-                </svg>
-                Vite+
-              </a>
-              <span className="text-muted-foreground/30" aria-hidden="true">
-                +
-              </span>
-              <a
-                href="https://tanstack.com/start"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 rounded-sm px-1 py-0.5 text-xs font-medium text-foreground/70 transition-colors hover:text-foreground"
-              >
-                TanStack
-              </a>
-              <span className="text-muted-foreground/30" aria-hidden="true">
-                +
-              </span>
-              <a
-                href="https://ui.shadcn.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 rounded-sm px-1 py-0.5 text-xs font-medium text-foreground/70 transition-colors hover:text-foreground"
-              >
-                <Icon icon={ShadcnIcon} className="size-3" aria-hidden="true" />
-                shadcn
-              </a>
-            </m.div>
+            {/* Brand */}
+            <div className="-ml-12">
+              <Penflow
+                text="Rodeo"
+                fontUrl="/fonts/Yellowtail-Regular.ttf"
+                color="#863bff"
+                size={128}
+                brushScale={0.12}
+                quality="calm"
+                seed="rodeo"
+                animate={!skip}
+              />
+            </div>
 
-            {/* Headline */}
+            {/* Tagline */}
             <m.h1
-              className="text-[clamp(2.25rem,6vw,3.5rem)] leading-[1.05] font-bold tracking-[-0.04em] text-balance text-foreground"
+              className="mt-4 text-[clamp(1.5rem,4vw,2.25rem)] leading-[1.2] font-bold tracking-[-0.03em] text-foreground"
               initial={skip ? false : { opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.08, ease: [0.25, 0.46, 0.45, 0.94] }}
             >
               Built for{" "}
-              <TextMorph as="span" className="text-[#863bff]" duration={600} respectReducedMotion>
+              <Calligraph as="span" className="text-[#863bff]" animation="smooth" trend={1}>
                 {currentWord}
-              </TextMorph>
+              </Calligraph>
             </m.h1>
 
             {/* Description */}
             <m.p
-              className="mt-4 max-w-sm text-[15px] leading-[1.65] text-pretty text-muted-foreground"
+              className="mt-3 max-w-sm text-[15px] leading-[1.65] text-pretty text-muted-foreground"
               initial={skip ? false : { opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.16, ease: [0.25, 0.46, 0.45, 0.94] }}
             >
-              A full-stack React starter with guardrails that keep AI
-              agents&#x2009;&#x2014;&#x2009;and developers&#x2009;&#x2014;&#x2009;writing correct
-              code by default.
+              Guardrails that keep AI agents&#x2009;&#x2014;&#x2009;and
+              developers&#x2009;&#x2014;&#x2009;writing correct code by default.
             </m.p>
 
             {/* Actions */}
@@ -180,14 +141,11 @@ function Home() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.24, ease: [0.25, 0.46, 0.45, 0.94] }}
             >
-              <Snippet
-                text="npx degit quinnsprouse/viteplus-shadcn-starter my-app"
-                className="w-full"
-              />
+              <Snippet text="npx degit quinnsprouse/rodeo my-app" className="w-full" />
 
-              <div className="mt-4 flex items-center gap-5">
+              <div className="mt-5 flex items-center gap-5">
                 <a
-                  href="https://github.com/quinnsprouse/viteplus-shadcn-starter"
+                  href="https://github.com/quinnsprouse/rodeo"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="group inline-flex items-center gap-1.5 text-sm font-medium text-foreground transition-colors hover:text-[#863bff]"
@@ -216,9 +174,9 @@ function Home() {
         {/* Features — scroll to see */}
         <section className="border-t border-border/40">
           <div className="mx-auto w-full max-w-2xl px-6 pt-20 pb-24 sm:px-10">
-            <p className="mb-14 text-sm text-muted-foreground">What ships out of the box</p>
+            <p className="mb-12 text-sm text-muted-foreground">What ships out of the box</p>
 
-            <div className="space-y-12">
+            <div className="space-y-10">
               {features.map((f) => (
                 <div key={f.title} className="grid gap-3 sm:grid-cols-[200px_1fr] sm:gap-8">
                   <div className="flex items-start gap-2.5">

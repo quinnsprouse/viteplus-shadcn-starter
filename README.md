@@ -1,11 +1,13 @@
-# Vite+ + shadcn Starter
+# Rodeo 🤠
 
-Minimal starter for Vite+ + TanStack Start + React 19 + shadcn/ui (Base UI) + Tailwind v4.
+Wrangle your agents. Steer your stack. Ship with confidence.
+
+An opinionated starter kit for agentic workflows — built on Vite+, TanStack Start, React 19, shadcn/ui, and Tailwind v4. Comes with built-in guardrails so your AI agents write code that actually passes the gate.
 
 ## Quick Start
 
 ```bash
-npx degit quinnsprouse/viteplus-shadcn-starter my-app
+npx degit quinnsprouse/rodeo my-app
 cd my-app
 cp .npmrc.example .npmrc
 # add your HugeIcons Pro token to .npmrc

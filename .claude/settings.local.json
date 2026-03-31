@@ -49,7 +49,19 @@
       "WebFetch(domain:react.dev)",
       "WebFetch(domain:nitro.build)",
       "WebFetch(domain:oxc.rs)",
-      "WebFetch(domain:github.com)"
+      "WebFetch(domain:github.com)",
+      "Bash(npx vp:*)",
+      "WebFetch(domain:app.paper.design)",
+      "WebSearch",
+      "WebFetch(domain:www.notebookandpenguin.com)",
+      "WebFetch(domain:technicalwall.com)",
+      "WebFetch(domain:fonts.google.com)",
+      "WebFetch(domain:fontsensei.com)",
+      "WebFetch(domain:calligraph.raphaelsalaja.com)",
+      "Bash(npm uninstall:*)",
+      "Bash(unzip -o /tmp/yellowtail.zip -d /tmp/yellowtail)",
+      "Bash(node:*)",
+      "WebFetch(domain:penflow.cretu.dev)"
     ],
     "ask": [
       "Bash(rm -rf *)",

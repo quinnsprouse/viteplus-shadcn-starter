@@ -27,6 +27,24 @@ export const Route = createRootRoute({
         content:
           "An agent-ready React starter with guardrails for AI agents. Built on Vite+, TanStack Start, shadcn/ui, and Tailwind v4.",
       },
+      // Open Graph
+      { property: "og:type", content: "website" },
+      { property: "og:title", content: "Rodeo — Wrangle Your AI Agents" },
+      {
+        property: "og:description",
+        content:
+          "An agent-ready React starter with guardrails for AI agents. Built on Vite+, TanStack Start, shadcn/ui, and Tailwind v4.",
+      },
+      { property: "og:image", content: "/og-image.png" },
+      // Twitter Card
+      { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "Rodeo — Wrangle Your AI Agents" },
+      {
+        name: "twitter:description",
+        content:
+          "An agent-ready React starter with guardrails for AI agents. Built on Vite+, TanStack Start, shadcn/ui, and Tailwind v4.",
+      },
+      { name: "twitter:image", content: "/og-image.png" },
     ],
     links: [
       { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },

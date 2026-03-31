@@ -15,6 +15,9 @@ export const Route = createFileRoute("/")({
 
 const rotatingWords = ["agents.", "humans.", "teams.", "you."];
 
+// ease-out-quint — snappy entrance, settles naturally (Emil Kowalski's animation principles)
+const EASE_OUT: [number, number, number, number] = [0.23, 1, 0.32, 1];
+
 const features: { icon: IconSvgElement; title: string; desc: string }[] = [
   {
     icon: Twotone.CancelCircleIcon,
@@ -98,9 +101,21 @@ function useRotatingWord(words: string[], intervalMs = 2000) {
   return words[index];
 }
 
+function useSkipIntro() {
+  const [seen] = useState(() => {
+    if (typeof sessionStorage === "undefined") return false;
+    const key = "rodeo:intro";
+    const hasSeen = sessionStorage.getItem(key) === "1";
+    if (!hasSeen) sessionStorage.setItem(key, "1");
+    return hasSeen;
+  });
+  return seen;
+}
+
 function Home() {
   const prefersReducedMotion = useReducedMotion();
-  const skip = !!prefersReducedMotion;
+  const hasSeenIntro = useSkipIntro();
+  const skip = !!prefersReducedMotion || hasSeenIntro;
   const currentWord = useRotatingWord(rotatingWords, 2500);
   const Penflow = useClientPenflow();
 
@@ -129,9 +144,9 @@ function Home() {
             {/* Tagline */}
             <m.h1
               className="mt-4 text-[clamp(1.5rem,4vw,2.25rem)] leading-[1.2] font-bold tracking-[-0.03em] text-foreground"
-              initial={skip ? false : { opacity: 0, y: 10 }}
+              initial={skip ? false : { opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.08, ease: [0.25, 0.46, 0.45, 0.94] }}
+              transition={{ duration: 0.4, delay: 0.5, ease: EASE_OUT }}
             >
               Built for{" "}
               <Calligraph as="span" className="text-[#863bff]" animation="smooth" trend={1}>
@@ -142,9 +157,9 @@ function Home() {
             {/* Description */}
             <m.p
               className="mt-3 max-w-sm text-[15px] leading-[1.65] text-pretty text-muted-foreground"
-              initial={skip ? false : { opacity: 0, y: 10 }}
+              initial={skip ? false : { opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.16, ease: [0.25, 0.46, 0.45, 0.94] }}
+              transition={{ duration: 0.4, delay: 0.65, ease: EASE_OUT }}
             >
               Guardrails that keep AI agents&#x2009;&#x2014;&#x2009;and
               developers&#x2009;&#x2014;&#x2009;writing correct code by default.
@@ -153,9 +168,9 @@ function Home() {
             {/* Actions */}
             <m.div
               className="mt-10"
-              initial={skip ? false : { opacity: 0, y: 10 }}
+              initial={skip ? false : { opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.24, ease: [0.25, 0.46, 0.45, 0.94] }}
+              transition={{ duration: 0.4, delay: 0.8, ease: EASE_OUT }}
             >
               <Snippet text="npx degit quinnsprouse/rodeo my-app" className="w-full" />
 

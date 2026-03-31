@@ -7,9 +7,8 @@ export default {
     "eslint-plugin-react-hooks",
     "@tanstack/eslint-plugin-router",
     "@tanstack/eslint-plugin-query",
-    // Type reference in __root.tsx and optional coverage provider
+    // Type reference in __root.tsx
     "vite",
-    "@vitest/coverage-v8",
   ],
   // skills CLI is invoked in prepare script
   ignoreBinaries: ["skills"],

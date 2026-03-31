@@ -35,7 +35,7 @@ export const Route = createRootRoute({
         content:
           "An agent-ready React starter with guardrails for AI agents. Built on Vite+, TanStack Start, shadcn/ui, and Tailwind v4.",
       },
-      { property: "og:image", content: "/og-image.png" },
+      { property: "og:image", content: "https://viteplus-shadcn-starter.vercel.app/og-image.png" },
       // Twitter Card
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "Rodeo — Wrangle Your AI Agents" },
@@ -44,7 +44,7 @@ export const Route = createRootRoute({
         content:
           "An agent-ready React starter with guardrails for AI agents. Built on Vite+, TanStack Start, shadcn/ui, and Tailwind v4.",
       },
-      { name: "twitter:image", content: "/og-image.png" },
+      { name: "twitter:image", content: "https://viteplus-shadcn-starter.vercel.app/og-image.png" },
     ],
     links: [
       { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
@@ -55,6 +55,7 @@ export const Route = createRootRoute({
     ],
   }),
   component: RootComponent,
+  errorComponent: ErrorComponent,
   notFoundComponent: NotFoundComponent,
 });
 
@@ -87,6 +88,24 @@ function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
         <Scripts />
       </body>
     </html>
+  );
+}
+
+function ErrorComponent({ error }: { error: Error }) {
+  return (
+    <div className="flex min-h-dvh flex-col items-center justify-center gap-6 px-4 text-center">
+      <div className="space-y-2">
+        <p className="text-sm font-medium text-muted-foreground">Error</p>
+        <h1 className="text-3xl font-semibold text-balance">Something went wrong</h1>
+        <p className="text-pretty text-muted-foreground">{error.message}</p>
+      </div>
+      <Link
+        to="/"
+        className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow hover:opacity-90"
+      >
+        Back home
+      </Link>
+    </div>
   );
 }
 

@@ -1,7 +1,7 @@
 import type { IconSvgElement } from "@hugeicons/react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Calligraph } from "calligraph";
-import { LazyMotion, domAnimation, m, useReducedMotion } from "motion/react";
+import { LazyMotion, m, useReducedMotion } from "motion/react";
 import type { ComponentType } from "react";
 import { useState } from "react";
 
@@ -105,7 +105,7 @@ function Home() {
   const Penflow = useClientPenflow();
 
   return (
-    <LazyMotion features={domAnimation}>
+    <LazyMotion features={() => import("motion/react").then((mod) => mod.domAnimation)}>
       <div className="bg-white selection:bg-[#863bff]/20">
         {/* Hero — fills viewport */}
         <section className="flex min-h-dvh flex-col justify-center px-6 sm:px-10">

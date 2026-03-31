@@ -1,4 +1,4 @@
-import { AnimatePresence, LazyMotion, domAnimation, m } from "motion/react";
+import { AnimatePresence, LazyMotion, m } from "motion/react";
 import { useRef, useState } from "react";
 
 import { Icon, Tick02Icon, Copy01Icon } from "@/components/icons";
@@ -73,7 +73,7 @@ export function Snippet({ text, prompt = true, className, onCopy }: SnippetProps
         aria-label={copied ? "Copied" : "Copy to clipboard"}
       >
         <div className="relative flex size-5 items-center justify-center">
-          <LazyMotion features={domAnimation}>
+          <LazyMotion features={() => import("motion/react").then((mod) => mod.domAnimation)}>
             <AnimatePresence mode="popLayout" initial={false}>
               <m.span
                 key={copied ? "check" : "copy"}

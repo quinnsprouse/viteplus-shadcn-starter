@@ -111,8 +111,8 @@ function Home() {
         <section className="flex min-h-dvh flex-col justify-center px-6 sm:px-10">
           <div className="mx-auto w-full max-w-2xl">
             {/* Brand */}
-            <div className="-ml-12">
-              {Penflow ? (
+            <div className="-ml-12 h-[172px]">
+              {Penflow && (
                 <Penflow
                   text="Rodeo"
                   fontUrl="/fonts/Yellowtail-Regular.ttf"
@@ -123,10 +123,6 @@ function Home() {
                   seed="rodeo"
                   animate={!skip}
                 />
-              ) : (
-                <span className="font-[Yellowtail] text-[128px] leading-[1] text-[#863bff]">
-                  Rodeo
-                </span>
               )}
             </div>
 

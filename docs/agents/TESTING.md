@@ -16,6 +16,8 @@ The profiles live in the Vite Task graph in `vite.config.ts`. Cached tasks use e
 
 Don't test what static analysis catches. Oxlint + TypeScript own type errors, unused vars, hook deps, formatting. Tests own **runtime behavior through public interfaces**.
 
+Project lint rules are the exception: `lint/rules.test.ts` runs each `rodeo/*` rule through the real Oxlint binary with a failing and a passing fixture, and `.claude/hooks/pre-tool-guard.test.ts` checks every guard decision. Both run in the Fast Profile.
+
 ## Test Design
 
 - Test observable outcomes: rendered UI, returned values, side effects at boundaries.
@@ -40,9 +42,15 @@ Don't test what static analysis catches. Oxlint + TypeScript own type errors, un
 
 ## Starter Journey
 
-`npm run test:template` tests the staged distribution artifact in a clean temporary directory. It performs `npm ci`, proves install and hooks do not mutate the distributed tree, exercises portable Edit Feedback, installs Chromium, executes the actual pre-push hook, and boots the production Nitro server.
+`npm run test:template` tests the staged distribution artifact in a clean temporary directory. It performs `npm ci`, proves install and hooks do not mutate the distributed tree, exercises portable Edit Feedback (format and lint), checks the Tool Guard, installs Chromium, executes the actual pre-push hook, and boots the production Nitro server.
 
 Stage intended starter changes before running it. Failures preserve the temporary app automatically and write diagnostics to `test-results/starter-journey/`; `KEEP_TEMPLATE_TEST=1` also preserves successful runs.
+
+## Agent Hooks
+
+- **Before a tool call**: `.claude/hooks/pre-tool-guard.mjs` denies edits to generated files, hook bypasses, and non-npm package managers, and asks a human before destructive Git commands. It matches on raw command text, so a shell heredoc that merely mentions a banned flag is blocked too; write such content with the file tools instead.
+- **After a write**: `.claude/hooks/post-edit.mjs` formats the file, lints it, and typechecks TypeScript. Lint errors appear in the hook output immediately.
+- Edits made through shell commands bypass the post-edit hook; the commit hook is the backstop.
 
 ## Git Hooks
 

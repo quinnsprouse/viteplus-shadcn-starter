@@ -146,6 +146,11 @@ export default defineConfig({
     options: {
       typeAware: true,
       typeCheck: true,
+      // Warnings block: an agent never sees a yellow line it can ignore.
+      denyWarnings: true,
+      // Inline suppression is banned (rodeo/no-disable-directives); these make the ban airtight.
+      reportUnusedDisableDirectives: "error",
+      respectEslintDisableDirectives: false,
     },
     jsPlugins: [
       { name: "react-hooks-js", specifier: "eslint-plugin-react-hooks" },
@@ -156,6 +161,8 @@ export default defineConfig({
         name: "eslint-tanstack-router",
         specifier: "@tanstack/eslint-plugin-router",
       },
+      // Project rules — docs/agents/LINT_RULES.md
+      { name: "rodeo", specifier: "./lint/rules.js" },
     ],
     rules: {
       "no-deprecated": "warn",
@@ -171,20 +178,71 @@ export default defineConfig({
       // Side-effect imports are legitimate for styles and test matchers
       "import/no-unassigned-import": ["warn", { allow: ["**/*.css", "@testing-library/jest-dom"] }],
 
-      // Ban direct useEffect — use useMountEffect from @/hooks instead
+      // Ban the effect hooks — use useMountEffect from @/hooks instead. rodeo/no-effect-hooks
+      // covers React.useEffect and other import shapes; this rule gives the import-site message.
       "no-restricted-imports": [
         "error",
         {
           paths: [
             {
               name: "react",
-              importNames: ["useEffect"],
+              importNames: ["useEffect", "useLayoutEffect", "useInsertionEffect"],
               message:
                 "Import useMountEffect from @/hooks/use-mount-effect instead. See docs/agents/REACT_PATTERNS.md",
             },
           ],
+          patterns: [
+            {
+              group: [
+                "lucide-react",
+                "react-icons",
+                "react-icons/*",
+                "@heroicons/*",
+                "@tabler/icons-react",
+              ],
+              message:
+                "Icons come from @/components/icons (Hugeicons). See docs/agents/UI_MOTION.md",
+            },
+            {
+              group: ["framer-motion"],
+              message: "Import from motion/react; framer-motion is the legacy package name.",
+            },
+          ],
         },
       ],
+      "import/no-relative-parent-imports": "error",
+      "import/no-default-export": "error",
+
+      // Type-safety escape hatches agents reach for under pressure
+      "typescript/no-explicit-any": "error",
+      "typescript/no-non-null-assertion": "error",
+      "typescript/ban-ts-comment": [
+        "error",
+        { "ts-expect-error": "allow-with-description", "ts-ignore": true, "ts-nocheck": true },
+      ],
+      "typescript/no-misused-promises": "error",
+      "typescript/no-unsafe-argument": "error",
+      "typescript/no-unsafe-assignment": "error",
+      "typescript/no-unsafe-call": "error",
+      "typescript/no-unsafe-member-access": "error",
+      "typescript/no-unsafe-return": "error",
+      "typescript/no-unsafe-type-assertion": "error",
+
+      // Runtime footguns
+      "react/no-danger": "error",
+      "no-console": ["error", { allow: ["warn", "error"] }],
+      "unicorn/no-array-for-each": "error",
+      "unicorn/no-abusive-eslint-disable": "error",
+
+      // Project rules — docs/agents/LINT_RULES.md
+      "rodeo/no-effect-hooks": "error",
+      "rodeo/no-disable-directives": "error",
+      "rodeo/server-fn-requires-validator": "error",
+      "rodeo/mount-effect-cleanup": "error",
+      "rodeo/no-hex-colors-in-classname": "error",
+      "rodeo/no-state-from-props": "error",
+      "rodeo/no-module-scope-browser-globals": "error",
+      "rodeo/no-window-navigation": "error",
 
       // TanStack Router
       "eslint-tanstack-router/create-route-property-order": "warn",
@@ -192,7 +250,6 @@ export default defineConfig({
       // React hooks (React Compiler compatible rules)
       "react-hooks-js/rules-of-hooks": "error",
       "react-hooks-js/exhaustive-deps": "warn",
-      "react-hooks-js/component-hook-factories": "error",
       "react-hooks-js/config": "error",
       "react-hooks-js/error-boundaries": "error",
       "react-hooks-js/gating": "error",
@@ -209,7 +266,38 @@ export default defineConfig({
       "react-hooks-js/use-memo": "error",
       "react-hooks-js/void-use-memo": "error",
     },
+    // Every lint exception lives here with a reason. Inline disable comments are errors (ADR 0004).
     overrides: [
+      {
+        // The one sanctioned useEffect: the wrapper every other file must use.
+        files: ["src/hooks/use-mount-effect.ts"],
+        rules: {
+          "no-restricted-imports": "off",
+          "rodeo/no-effect-hooks": "off",
+          "react-hooks/exhaustive-deps": "off",
+          "react-hooks-js/exhaustive-deps": "off",
+        },
+      },
+      {
+        // Plain JavaScript has no types, so the type-aware unsafe-* family only adds noise there.
+        files: ["**/*.{js,mjs,cjs}"],
+        rules: {
+          "typescript/no-unsafe-argument": "off",
+          "typescript/no-unsafe-assignment": "off",
+          "typescript/no-unsafe-call": "off",
+          "typescript/no-unsafe-member-access": "off",
+          "typescript/no-unsafe-return": "off",
+        },
+      },
+      {
+        // Tooling files: config default exports, Node scripts that print, and lint fixtures.
+        files: ["*.config.ts", "lint/**", "scripts/**", ".claude/hooks/**", "e2e/**"],
+        rules: {
+          "import/no-default-export": "off",
+          "no-console": "off",
+          "unicorn/no-array-for-each": "off",
+        },
+      },
       {
         files: ["src/**/*.{test,spec}.{ts,tsx}"],
         rules: {

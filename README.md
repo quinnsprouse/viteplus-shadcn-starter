@@ -65,6 +65,8 @@ Vite+ owns the Git hook seam:
 - **commit-msg**: commitlint enforces Conventional Commits
 - **pre-push**: `npm run check:push`
 
+Claude Code hooks in `.claude/settings.json` add two more layers: a Tool Guard that refuses edits to generated files, `git commit --no-verify`, and non-npm package managers before they happen, and Edit Feedback that formats, lints, and typechecks every file the moment it is written.
+
 Cached tasks use explicit inputs so they work inside restricted agent sandboxes as well as normal terminals.
 
 ## Starter Contract
@@ -87,9 +89,11 @@ Failures preserve the temporary app and write evidence to `test-results/starter-
 
 ## Key Conventions
 
-- **No direct `useEffect`** — enforced by lint rule. Use `useMountEffect` from `@/hooks` for mount-only sync. See `docs/agents/REACT_PATTERNS.md`.
+- **No direct `useEffect`** — enforced by lint rule in every import shape. Use `useMountEffect` from `@/hooks` for mount-only sync. See `docs/agents/REACT_PATTERNS.md`.
 - **Derive state inline** — don't sync state with effects.
 - **Use route loaders** — don't fetch in effects.
+- **Warnings fail, suppressions are errors** — no `oxlint-disable` or `eslint-disable` comments. Exceptions live in `lint.overrides` in `vite.config.ts` with a reason. See `docs/agents/LINT_RULES.md`.
+- **Project lint rules** — `lint/rules.js` bans the mistakes stock rules miss: `React.useEffect`, unvalidated server-function input, mount effects without cleanup, state seeded from props, module-scope browser globals, `window.location` navigation, and hex colors in `className`. Each rule is tested against the real Oxlint binary.
 
 ## Optional Agent Skills
 
@@ -106,6 +110,7 @@ src/
   hooks/        # custom hooks (useMountEffect, etc.)
   lib/          # shared utils
   styles/       # global styles + theme
+lint/           # project oxlint rules + their tests
 e2e/            # Playwright smoke tests
 docs/agents/    # progressive disclosure agent docs
 docs/adr/       # concise load-bearing decisions
@@ -119,7 +124,7 @@ scripts/         # local setup scripts
 - `CLAUDE.md` is symlinked to `AGENTS.md`.
 - `CONTEXT.md` defines the Starter Journey, Starter Contract, Feedback Loop, and Verification Profiles.
 - Detailed guidance lives in `docs/agents/`; load-bearing decisions live in `docs/adr/`.
-- Shareable Claude edit feedback lives in `.claude/settings.json`; personal permissions stay in ignored `.claude/settings.local.json`.
+- Shareable Claude hooks (Tool Guard and Edit Feedback) live in `.claude/settings.json`; personal permissions stay in ignored `.claude/settings.local.json`.
 
 ## License
 

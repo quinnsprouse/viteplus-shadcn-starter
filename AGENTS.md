@@ -5,6 +5,7 @@ Agent-ready starter kit: Vite+ + TanStack Start + React 19, with shadcn/ui (Base
 - Push gate: `npm run check:push` (check + build + dead code + Playwright e2e)
 - CI gate: `npm run check:ci` (push + clean template journey + React Doctor + audit)
 - React health: `npm run doctor` (react-doctor scan — security, performance, correctness, architecture; also runs on staged files at commit and in CI)
+- Lint policy: warnings fail, inline `oxlint-disable` / `eslint-disable` comments are errors; exceptions go in `lint.overrides` in `vite.config.ts` with a reason
 - Dev: `npm run dev` (localhost:3000)
 - Build: `npm run build`
 - Hook recovery: `npm run setup` (after `git init`)
@@ -30,4 +31,5 @@ Open these only when relevant:
 - [Full-stack Example](docs/agents/FULL_STACK_EXAMPLE.md) — executable loader → server function → UI → error flow
 - [UI and Motion](docs/agents/UI_MOTION.md) — Tailwind tokens, Motion library, icon imports
 - [React Patterns](docs/agents/REACT_PATTERNS.md) — no useEffect, derived state, component design
+- [Lint Rules](docs/agents/LINT_RULES.md) — what the gate bans, the project `rodeo/*` rules, how to add one
 - [Testing](docs/agents/TESTING.md) — feedback loop, test scope policy, pre-commit guardrails

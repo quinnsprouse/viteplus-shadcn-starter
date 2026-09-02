@@ -58,7 +58,7 @@ export function TerminalDemo({ className }: { className?: string }) {
               line.kind === "cmd" && "text-white/90",
               line.kind === "ok" && "text-white/55",
               line.kind === "dim" && "text-white/30",
-              line.kind === "note" && "pt-1 text-[#b794ff]",
+              line.kind === "note" && "pt-1 text-brand-soft",
             )}
           >
             {line.kind === "cmd" && <span className="text-white/30 select-none">$</span>}

@@ -15,7 +15,7 @@ export default defineConfig({
     environment: "jsdom",
     globals: true,
     setupFiles: ["./src/test/setup.ts"],
-    include: ["src/**/*.{test,spec}.{ts,tsx}"],
+    include: ["src/**/*.{test,spec}.{ts,tsx}", "lint/**/*.test.ts", ".claude/hooks/*.test.ts"],
     coverage: {
       provider: "v8",
       reporter: ["text", "html", "json-summary"],

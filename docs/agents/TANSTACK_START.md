@@ -11,6 +11,7 @@
 ## Server Functions
 
 - Use `createServerFn` for server-only logic. Always `await` the call.
+- A handler that reads `data` must declare `.validator(fn)` (or `.inputValidator(fn)`) first; `rodeo/server-fn-requires-validator` rejects unvalidated input at the boundary.
 - Never pass non-serializable values (functions, class instances) across the server boundary.
 - For data refresh after mutations: `router.invalidate()`.
 - Retry loader failures with `router.invalidate()` so loaders rerun before the error boundary resets.
@@ -35,6 +36,8 @@
 - Use `*.server.*` and `*.client.*` filenames (or the matching server-only/client-only markers) at environment boundaries.
 - Production: `node .output/server/index.mjs`.
 - URL should always reflect application state — use search params, not hidden state.
+- Navigate with `useNavigate()` or `<Link>`, never `window.location` (`rodeo/no-window-navigation`).
+- Never touch `window`, `document`, or storage at module scope; modules load on the server too (`rodeo/no-module-scope-browser-globals`).
 
 ## Executable Example
 

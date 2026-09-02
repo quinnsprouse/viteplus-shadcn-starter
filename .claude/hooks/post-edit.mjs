@@ -24,6 +24,7 @@ const supportedExtensions = new Set([
   ".yml",
 ]);
 const typeScriptExtensions = new Set([".cts", ".mts", ".ts", ".tsx"]);
+const lintExtensions = new Set([".cjs", ".cts", ".js", ".jsx", ".mjs", ".mts", ".ts", ".tsx"]);
 const ignoredRoots = [
   ".git",
   ".output",
@@ -46,7 +47,7 @@ function run(binary, args) {
   return spawnSync(process.execPath, [binary, ...args], {
     cwd: projectRoot,
     encoding: "utf8",
-    env: process.env,
+    env: { ...process.env, NO_COLOR: "1" },
   });
 }
 
@@ -92,14 +93,26 @@ try {
     process.exit(0);
   }
 
+  const feedback = [];
+
+  if (lintExtensions.has(extension)) {
+    // Lint the edited file alone so the banned patterns surface on write, not at commit.
+    const lint = run(packageBinary("vite-plus", "vp"), ["lint", target]);
+    if (lint.status !== 0) {
+      feedback.push(`Lint found an issue in ${projectPath}.\n${lint.stdout || lint.stderr}`);
+    }
+  }
+
   if (typeScriptExtensions.has(extension)) {
     const typecheck = run(packageBinary("typescript", "tsc"), ["-b", "--pretty", "false"]);
     if (typecheck.status !== 0) {
-      report(
+      feedback.push(
         `Type checking found an issue after editing ${projectPath}.\n${typecheck.stdout || typecheck.stderr}`,
       );
     }
   }
+
+  if (feedback.length > 0) report(feedback.join("\n\n"));
 } catch (error) {
   report(
     `Post-edit feedback could not run.\n${error instanceof Error ? error.message : String(error)}`,

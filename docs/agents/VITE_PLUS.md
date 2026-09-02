@@ -36,7 +36,7 @@ Call Verification Profiles through their `npm run check*` scripts. The verificat
 
 ## Pitfalls
 
-- Vite+ 0.2 pins a direct `vitest` package and override to the bundled runner version. Keep that exact lockstep; do not install oxlint, oxfmt, or tsdown directly.
+- Vite+ 0.3 pins a direct `vitest` package and override to the bundled runner version. Keep that exact lockstep; do not install oxlint, oxfmt, or tsdown directly.
 - `vp dev` runs the Vite dev server, not a `package.json` script. Use `vp run dev` for custom scripts.
 - Use `vp dlx` instead of `npx`.
 - `vp vitest` / `vp oxlint` don't exist — use `vp test` / `vp lint`.

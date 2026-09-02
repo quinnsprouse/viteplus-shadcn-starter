@@ -57,6 +57,8 @@ export const Route = createFileRoute("/")({
 });
 
 const rotatingWords = ["agents.", "humans.", "teams.", "you."];
+// Mirrors --color-brand in src/styles/app.css; Penflow paints a canvas and cannot read CSS tokens.
+const BRAND_COLOR = "#863bff";
 
 // ease-out-quint — snappy entrance, settles naturally (Emil Kowalski's animation principles)
 const EASE_OUT: [number, number, number, number] = [0.23, 1, 0.32, 1];
@@ -65,7 +67,7 @@ const features: { icon: IconSvgElement; title: string; desc: string }[] = [
   {
     icon: CancelCircleIcon,
     title: "No useEffect",
-    desc: "Banned via lint rule. Agents and developers use useMountEffect for mount-only sync\u2009\u2014\u2009no race conditions, no infinite loops, no implicit control flow.",
+    desc: "Banned in every import shape, with no inline escape hatch. Agents and developers use useMountEffect for mount-only sync\u2009\u2014\u2009no race conditions, no infinite loops, no implicit control flow.",
   },
   {
     icon: AiBookIcon,
@@ -84,8 +86,8 @@ const features: { icon: IconSvgElement; title: string; desc: string }[] = [
   },
   {
     icon: MagicWand01Icon,
-    title: "Auto-format on every edit",
-    desc: "Portable Edit Feedback formats supported files after every write and typechecks TypeScript edits. Import and Tailwind class sorting happen automatically.",
+    title: "Feedback on every edit",
+    desc: "Portable Edit Feedback formats, lints, and typechecks each file the moment it is written, and a Tool Guard refuses hook bypasses and edits to generated files before they happen. Import and Tailwind class sorting happen automatically.",
   },
   {
     icon: Target01Icon,
@@ -97,7 +99,7 @@ const features: { icon: IconSvgElement; title: string; desc: string }[] = [
 const loop: { when: string; what: string }[] = [
   {
     when: "on write",
-    what: "Project-owned Claude hooks format every supported file and typecheck TypeScript edits. Mistakes surface in seconds, not at code review.",
+    what: "Project-owned Claude hooks format, lint, and typecheck every edited file. Mistakes surface in seconds, not at code review.",
   },
   {
     when: "on commit",
@@ -235,9 +237,51 @@ function useRotatingWord(words: string[], intervalMs = 2000) {
   return words[index];
 }
 
+type StarterStatus = Awaited<ReturnType<typeof loadStarterStatus>>;
+
+function StarterStatusCard({ starterStatus }: { starterStatus: StarterStatus }) {
+  const failed = starterStatus.state === "error";
+
+  return (
+    <div
+      className="mt-8 grid gap-5 rounded-xl border border-border bg-muted/30 p-5 sm:grid-cols-[1fr_auto] sm:items-center"
+      role={failed ? "alert" : "status"}
+    >
+      <div>
+        <div className="flex items-center gap-2">
+          <span
+            className={cn("size-2 rounded-full", failed ? "bg-amber-500" : "bg-emerald-500")}
+            aria-hidden="true"
+          />
+          <h3 className="text-sm font-semibold tracking-tight text-foreground">
+            {failed ? "Handled server error" : "Live full-stack example"}
+          </h3>
+        </div>
+        <p className="mt-2 text-[13px] leading-relaxed text-pretty text-muted-foreground">
+          {starterStatus.message}
+        </p>
+        <p className="mt-2 font-mono text-[11px] text-muted-foreground/70">
+          route loader → server function → rendered result
+        </p>
+      </div>
+      <Link
+        to="/"
+        search={failed ? {} : { demo: "error" }}
+        className="group inline-flex items-center gap-1.5 text-sm font-medium text-foreground transition-colors hover:text-brand"
+      >
+        {failed ? "Return to ready state" : "Preview the error path"}
+        <Icon
+          icon={ArrowRight01Icon}
+          className="size-3 transition-transform duration-150 group-hover:translate-x-0.5"
+          aria-hidden="true"
+        />
+      </Link>
+    </div>
+  );
+}
+
 function Home() {
   const starterStatus = Route.useLoaderData();
-  const starterStatusFailed = starterStatus.state === "error";
   const prefersReducedMotion = usePrefersReducedMotion();
   const skip = prefersReducedMotion;
   const currentWord = useRotatingWord(rotatingWords, 2500);
@@ -248,7 +292,7 @@ function Home() {
 
   return (
     <LazyMotion features={() => import("motion/react").then((mod) => mod.domAnimation)}>
-      <div className="bg-white selection:bg-[#863bff]/20">
+      <div className="bg-white selection:bg-brand/20">
         {/* Hero — fills viewport */}
         <section className="flex min-h-dvh flex-col justify-center px-6 sm:px-10">
           <div className="mx-auto w-full max-w-2xl">
@@ -260,7 +304,7 @@ function Home() {
               {!Penflow && (
                 <div
                   className={cn(
-                    "pt-3 pl-12 font-[Yellowtail] text-[128px] leading-none text-[#863bff] transition-opacity duration-300",
+                    "pt-3 pl-12 font-[Yellowtail] text-[128px] leading-none text-brand transition-opacity duration-300",
                     penflowFailed ? "opacity-100" : "opacity-0",
                   )}
                 >
@@ -271,7 +315,7 @@ function Home() {
                 <Penflow
                   text="Rodeo"
                   fontUrl="/fonts/Yellowtail-Regular.ttf"
-                  color="#863bff"
+                  color={BRAND_COLOR}
                   size={128}
                   brushScale={0.12}
                   quality="calm"
@@ -289,7 +333,7 @@ function Home() {
               transition={{ duration: 0.4, delay: 0.1, ease: EASE_OUT }}
             >
               Built for{" "}
-              <Calligraph as="span" className="text-[#863bff]" animation="smooth" trend={1}>
+              <Calligraph as="span" className="text-brand" animation="smooth" trend={1}>
                 {currentWord}
               </Calligraph>
             </m.h1>
@@ -320,7 +364,7 @@ function Home() {
                   href="https://github.com/quinnsprouse/rodeo"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="group inline-flex items-center gap-1.5 text-sm font-medium text-foreground transition-colors hover:text-[#863bff]"
+                  className="group inline-flex items-center gap-1.5 text-sm font-medium text-foreground transition-colors hover:text-brand"
                 >
                   <Icon icon={Github01Icon} className="size-4" aria-hidden="true" />
                   GitHub
@@ -357,48 +401,12 @@ function Home() {
 
             <TerminalDemo className="mt-10" />
 
-            <div
-              className="mt-8 grid gap-5 rounded-xl border border-border bg-muted/30 p-5 sm:grid-cols-[1fr_auto] sm:items-center"
-              role={starterStatusFailed ? "alert" : "status"}
-            >
-              <div>
-                <div className="flex items-center gap-2">
-                  <span
-                    className={cn(
-                      "size-2 rounded-full",
-                      starterStatusFailed ? "bg-amber-500" : "bg-emerald-500",
-                    )}
-                    aria-hidden="true"
-                  />
-                  <h3 className="text-sm font-semibold tracking-tight text-foreground">
-                    {starterStatusFailed ? "Handled server error" : "Live full-stack example"}
-                  </h3>
-                </div>
-                <p className="mt-2 text-[13px] leading-relaxed text-pretty text-muted-foreground">
-                  {starterStatus.message}
-                </p>
-                <p className="mt-2 font-mono text-[11px] text-muted-foreground/70">
-                  route loader → server function → rendered result
-                </p>
-              </div>
-              <Link
-                to="/"
-                search={starterStatusFailed ? {} : { demo: "error" }}
-                className="group inline-flex items-center gap-1.5 text-sm font-medium text-foreground transition-colors hover:text-[#863bff]"
-              >
-                {starterStatusFailed ? "Return to ready state" : "Preview the error path"}
-                <Icon
-                  icon={ArrowRight01Icon}
-                  className="size-3 transition-transform duration-150 group-hover:translate-x-0.5"
-                  aria-hidden="true"
-                />
-              </Link>
-            </div>
+            <StarterStatusCard starterStatus={starterStatus} />
 
             <div className="mt-12 space-y-8">
               {loop.map((step) => (
                 <div key={step.when} className="grid gap-2 sm:grid-cols-[200px_1fr] sm:gap-8">
-                  <p className="font-mono text-[13px] font-medium text-[#863bff]">{step.when}</p>
+                  <p className="font-mono text-[13px] font-medium text-brand">{step.when}</p>
                   <p className="text-[13px] leading-[1.7] text-pretty text-muted-foreground">
                     {step.what}
                   </p>
@@ -419,7 +427,7 @@ function Home() {
                   <div className="flex items-start gap-2.5">
                     <Icon
                       icon={f.icon}
-                      className="mt-0.5 size-4 shrink-0 text-[#863bff]"
+                      className="mt-0.5 size-4 shrink-0 text-brand"
                       strokeWidth={1.75}
                       aria-hidden="true"
                     />

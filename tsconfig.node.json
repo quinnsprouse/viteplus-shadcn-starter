@@ -23,6 +23,8 @@
     "noUncheckedSideEffectImports": true
   },
   "include": [
+    ".claude/hooks/*.test.ts",
+    "lint/**/*.ts",
     "commitlint.config.ts",
     "doctor.config.ts",
     "knip.config.ts",

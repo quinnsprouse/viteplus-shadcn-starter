@@ -4,27 +4,18 @@ export default {
   // Vite+ is not a stock Vite/Vitest package, so make its executable surfaces explicit.
   entry: [
     ".claude/hooks/*.mjs",
-    "commitlint.config.ts",
+    // Loaded by string specifier from vite.config.ts and doctor.config.ts
+    "lint/rules.js",
     "e2e/**/*.ts",
-    "playwright.config.ts",
     "scripts/**/*.mjs",
-    "src/router.tsx",
     "src/routes/**/*.{ts,tsx}",
     "src/**/*.test.{ts,tsx}",
-    "src/test/setup.ts",
-    "vite.config.ts",
-    "vitest.config.ts",
   ],
-  // vp (vite-plus) consumes these internally via oxlint bridge — knip can't trace string specifiers
   ignoreDependencies: [
+    // The commit-msg shell hook invokes this executable outside Knip's JavaScript analysis.
     "@commitlint/cli",
-    "@vitest/coverage-v8",
-    "jsdom",
-    "eslint-plugin-react-hooks",
-    "eslint-plugin-testing-library",
-    "eslint-plugin-jest-dom",
-    "eslint-plugin-playwright",
-    "@tanstack/eslint-plugin-router",
+    // Bundled by vite-plus; lint/rules.test.ts drives the binary directly to test the plugin.
+    "oxlint",
   ],
   // Consumed by the react-doctor CLI, which knip has no plugin for
   ignore: ["doctor.config.ts"],

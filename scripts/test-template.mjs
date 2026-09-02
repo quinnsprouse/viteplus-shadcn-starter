@@ -187,7 +187,11 @@ try {
   assertTree(distributedTree, "pre-commit feedback");
 
   const claudeSettings = JSON.parse(readFileSync(join(appRoot, ".claude/settings.json"), "utf8"));
-  assert.equal(claudeSettings.hooks.PostToolUse[0].matcher, "Edit|Write");
+  assert.equal(claudeSettings.hooks.PostToolUse[0].matcher, "Edit|Write|MultiEdit");
+  assert.equal(
+    claudeSettings.hooks.PreToolUse[0].matcher,
+    "Edit|Write|MultiEdit|NotebookEdit|Bash",
+  );
   const hookProbe = join(appRoot, ".scratch", "hook-probe.ts");
   mkdirSync(dirname(hookProbe), { recursive: true });
   writeFileSync(hookProbe, "export  const hookProbe={value:'ok'}\n");
@@ -201,6 +205,36 @@ try {
   });
   assert.equal(readFileSync(hookProbe, "utf8"), 'export const hookProbe = { value: "ok" };\n');
   rmSync(hookProbe);
+
+  // Edit Feedback must surface the banned pattern on write, not at commit.
+  const lintProbe = join(appRoot, "src", "lint-probe.tsx");
+  writeFileSync(
+    lintProbe,
+    'import React from "react";\nexport function Probe() {\n  React.useEffect(() => {}, []);\n  return null;\n}\n',
+  );
+  const lintFeedback = run(process.execPath, [".claude/hooks/post-edit.mjs"], {
+    capture: true,
+    input: JSON.stringify({
+      hook_event_name: "PostToolUse",
+      tool_name: "Write",
+      tool_input: { file_path: lintProbe },
+    }),
+  });
+  assert.match(lintFeedback.stdout, /rodeo\(no-effect-hooks\)/);
+  rmSync(lintProbe);
+
+  // The Tool Guard must refuse a hook bypass and stay silent for ordinary commands.
+  const guardDecision = (command) =>
+    run(process.execPath, [".claude/hooks/pre-tool-guard.mjs"], {
+      capture: true,
+      input: JSON.stringify({
+        hook_event_name: "PreToolUse",
+        tool_name: "Bash",
+        tool_input: { command },
+      }),
+    }).stdout;
+  assert.match(guardDecision('git commit -m "feat: x" --no-verify'), /"permissionDecision":"deny"/);
+  assert.equal(guardDecision("npm run check"), "");
 
   run("git", [
     "-c",

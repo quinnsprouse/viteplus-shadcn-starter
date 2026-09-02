@@ -29,12 +29,12 @@ jobs:
   react-doctor:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - uses: millionco/react-doctor@v2
         with:
           blocking: warning
-          version: "0.7.3"
+          version: "0.9.13"
         # Additional configuration knobs — uncomment any to override the default.
         # Full reference: https://www.react.doctor/ci
         #   scope: full              # On PRs, scan the whole project instead of just changed files

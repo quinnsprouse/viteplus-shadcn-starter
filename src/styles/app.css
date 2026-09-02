@@ -12,6 +12,9 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+  /* Brand accent. Use text-brand / bg-brand / border-brand; never an arbitrary hex in className. */
+  --color-brand: #863bff;
+  --color-brand-soft: #b794ff;
   --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
   --radius-sm: calc(var(--radius) - 4px);

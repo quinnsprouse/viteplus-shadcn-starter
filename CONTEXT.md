@@ -33,15 +33,24 @@ The repository Verification Profile that adds coverage, the clean Starter Journe
 _Avoid_: GitHub check, remote gate
 
 **Edit Feedback**:
-Portable, project-owned formatting and type diagnostics returned immediately after an agent writes code.
+Portable, project-owned formatting, lint, and type diagnostics returned immediately after an agent writes code.
 _Avoid_: Claude magic, local hook script
+
+**Tool Guard**:
+The project-owned check that runs before an agent tool call and refuses edits to generated files, hook bypasses, and foreign package managers, escalating destructive Git commands to a human.
+_Avoid_: Permission hack, sandbox
+
+**Project Rule**:
+A lint rule Rodeo writes itself, in `lint/rules.js`, for a pattern no stock rule expresses. Project Rules run everywhere stock rules run.
+_Avoid_: Custom lint, eslint plugin
 
 ## Relationships
 
 - The **Starter Journey** must satisfy the **Starter Contract**.
 - The **Feedback Loop** is expressed through three **Verification Profiles**.
 - The **Push Profile** contains the **Fast Profile**; the **CI Profile** contains the **Push Profile**.
-- **Edit Feedback** is the earliest layer of the **Feedback Loop**.
+- **Edit Feedback** is the earliest layer of the **Feedback Loop**; the **Tool Guard** runs even earlier, before the edit exists.
+- **Project Rules** are part of every **Verification Profile** and of **Edit Feedback**.
 
 ## Example dialogue
 

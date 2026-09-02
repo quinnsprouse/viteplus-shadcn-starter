@@ -2,7 +2,7 @@
 
 ## No Direct useEffect
 
-`useEffect` is banned via lint rule. It causes race conditions, infinite loops, and implicit control flow that's hard to trace. For the rare mount-sync case, use `useMountEffect()` from `@/hooks/use-mount-effect`.
+`useEffect`, `useLayoutEffect`, and `useInsertionEffect` are banned via lint rule in every import shape, including `React.useEffect` and aliases. They cause race conditions, infinite loops, and implicit control flow that's hard to trace. For the rare mount-sync case, use `useMountEffect()` from `@/hooks/use-mount-effect`. Inline disable comments are also lint errors; see [Lint Rules](LINT_RULES.md).
 
 ### What to do instead
 
@@ -67,6 +67,31 @@ useMountEffect(() => {
   const sub = externalSystem.subscribe();
   return () => sub.unsubscribe();
 });
+```
+
+Any `useMountEffect` that starts a timer, listener, or subscription must return a cleanup, and the callback cannot be `async` (`rodeo/mount-effect-cleanup`).
+
+**Don't seed state from a prop:**
+
+```tsx
+// BAD — `value` changes, `draft` does not (rodeo/no-state-from-props)
+const [draft, setDraft] = useState(value);
+
+// GOOD — derive, lift, or remount
+const draft = value;
+<Editor key={docId} initialValue={value} />; // props named initial*/default* are exempt
+```
+
+**Browser globals belong inside functions:**
+
+```tsx
+// BAD — throws during SSR (rodeo/no-module-scope-browser-globals)
+const saved = localStorage.getItem("draft");
+
+// GOOD
+function readDraft() {
+  return localStorage.getItem("draft");
+}
 ```
 
 ### Conditional mounting over effect guards

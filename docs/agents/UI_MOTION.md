@@ -3,7 +3,8 @@
 ## Styling
 
 - Tailwind CSS v4 utility classes only. Use `cn()` from `@/lib/utils` to compose.
-- Always use theme tokens (`bg-background`, `text-foreground`, `border-border`) — never ad-hoc hex colors.
+- Always use theme tokens (`bg-background`, `text-foreground`, `border-border`) — never ad-hoc hex colors. `rodeo/no-hex-colors-in-classname` rejects `[#hex]` values in `className` outside `src/components/ui/`.
+- Brand accent: `text-brand`, `bg-brand`, `border-brand`, and `brand-soft` for the lighter tint, declared as `--color-brand*` in `src/styles/app.css`. Add a token there when a new color is needed.
 - Dark mode via `.dark` class on `<html>`. Use CSS variables for theme, not Tailwind `dark:` modifier where possible.
 - Use shadows instead of borders for subtle separation. For hairline borders: `border` + `border-color` with opacity.
 

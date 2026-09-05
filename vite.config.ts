@@ -9,11 +9,15 @@ import { defineConfig } from "vite-plus";
 // Explicit inputs keep Vite Task caching reliable inside restricted agent sandboxes,
 // where automatic file tracing may not be able to create its shared-memory channel.
 const verificationInputs = [
+  ".claude/**",
+  ".codex/hooks/**",
+  ".codex/hooks.json",
   ".env*",
   ".github/**",
+  ".gitignore",
+  ".nvmrc",
   ".vite-hooks/**",
   "AGENTS.md",
-  "CONTEXT.md",
   "README.md",
   "commitlint.config.ts",
   "components.json",
@@ -21,11 +25,13 @@ const verificationInputs = [
   "doctor.config.ts",
   "e2e/**",
   "knip.config.ts",
+  "lint/**",
   "package-lock.json",
   "package.json",
   "playwright.config.ts",
   "public/**",
   "scripts/**",
+  "skills-lock.json",
   "src/**",
   "tsconfig*.json",
   "vite.config.ts",
@@ -48,7 +54,7 @@ export default defineConfig({
   run: {
     tasks: {
       "verify:fast": {
-        command: ["vp check", "vp test run"],
+        command: ["node scripts/check-toolchain.mjs", "vp check", "vp test run"],
         input: verificationInputs,
         env: ["VITE_*", "NODE_ENV"],
       },
@@ -65,7 +71,7 @@ export default defineConfig({
         input: verificationInputs,
       },
       "verify:push": {
-        command: "node scripts/run-playwright.mjs --production test",
+        command: "playwright test",
         dependsOn: ["verify:dead-code"],
         cache: false,
       },
@@ -178,19 +184,9 @@ export default defineConfig({
       // Side-effect imports are legitimate for styles and test matchers
       "import/no-unassigned-import": ["warn", { allow: ["**/*.css", "@testing-library/jest-dom"] }],
 
-      // Ban the effect hooks — use useMountEffect from @/hooks instead. rodeo/no-effect-hooks
-      // covers React.useEffect and other import shapes; this rule gives the import-site message.
       "no-restricted-imports": [
         "error",
         {
-          paths: [
-            {
-              name: "react",
-              importNames: ["useEffect", "useLayoutEffect", "useInsertionEffect"],
-              message:
-                "Import useMountEffect from @/hooks/use-mount-effect instead. See docs/agents/REACT_PATTERNS.md",
-            },
-          ],
           patterns: [
             {
               group: [
@@ -221,6 +217,12 @@ export default defineConfig({
         { "ts-expect-error": "allow-with-description", "ts-ignore": true, "ts-nocheck": true },
       ],
       "typescript/no-misused-promises": "error",
+      "typescript/prefer-promise-reject-errors": "error",
+      // A new union member must be handled explicitly, even when a switch has a default.
+      "typescript/switch-exhaustiveness-check": [
+        "error",
+        { considerDefaultExhaustiveForUnions: false },
+      ],
       "typescript/no-unsafe-argument": "error",
       "typescript/no-unsafe-assignment": "error",
       "typescript/no-unsafe-call": "error",
@@ -229,16 +231,18 @@ export default defineConfig({
       "typescript/no-unsafe-type-assertion": "error",
 
       // Runtime footguns
+      eqeqeq: ["error", "always", { null: "ignore" }],
+      "no-empty": "error",
+      "react/button-has-type": "error",
+      "react/checked-requires-onchange-or-readonly": "error",
       "react/no-danger": "error",
       "no-console": ["error", { allow: ["warn", "error"] }],
       "unicorn/no-array-for-each": "error",
       "unicorn/no-abusive-eslint-disable": "error",
 
       // Project rules — docs/agents/LINT_RULES.md
-      "rodeo/no-effect-hooks": "error",
       "rodeo/no-disable-directives": "error",
       "rodeo/server-fn-requires-validator": "error",
-      "rodeo/mount-effect-cleanup": "error",
       "rodeo/no-hex-colors-in-classname": "error",
       "rodeo/no-state-from-props": "error",
       "rodeo/no-module-scope-browser-globals": "error",
@@ -249,7 +253,7 @@ export default defineConfig({
 
       // React hooks (React Compiler compatible rules)
       "react-hooks-js/rules-of-hooks": "error",
-      "react-hooks-js/exhaustive-deps": "warn",
+      "react-hooks-js/exhaustive-deps": "error",
       "react-hooks-js/config": "error",
       "react-hooks-js/error-boundaries": "error",
       "react-hooks-js/gating": "error",
@@ -269,14 +273,9 @@ export default defineConfig({
     // Every lint exception lives here with a reason. Inline disable comments are errors (ADR 0004).
     overrides: [
       {
-        // The one sanctioned useEffect: the wrapper every other file must use.
-        files: ["src/hooks/use-mount-effect.ts"],
-        rules: {
-          "no-restricted-imports": "off",
-          "rodeo/no-effect-hooks": "off",
-          "react-hooks/exhaustive-deps": "off",
-          "react-hooks-js/exhaustive-deps": "off",
-        },
+        // noImplicitReturns checks control flow correctly for exhaustive union switches.
+        files: ["**/*.{ts,tsx}"],
+        rules: { "typescript/consistent-return": "off" },
       },
       {
         // Plain JavaScript has no types, so the type-aware unsafe-* family only adds noise there.

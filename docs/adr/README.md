@@ -8,4 +8,4 @@ Record a decision here when it is expensive to reverse, surprising without conte
 One to three sentences describing the context, decision, and reason.
 ```
 
-Keep ADRs concise. Update `CONTEXT.md` instead when the change only sharpens Rodeo's domain language.
+Update the relevant implementation guide for routine workflow changes; reserve ADRs for decisions that need their reasoning preserved.

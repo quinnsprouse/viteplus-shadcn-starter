@@ -1,3 +1,3 @@
-# Test the Starter Journey
+# Test a clean copy of the starter
 
-CI treats the Git index copied into a clean temporary directory as Rodeo's distribution artifact and replays the Starter Journey there. The contract requires a lockfile-exact install, a clean distributed tree after setup and hooks, portable Edit Feedback, an explicit browser install, the real pre-push hook, and a bootable production Nitro server. Failures preserve the temporary app and diagnostic evidence because application checks alone cannot prove or explain a broken starter experience.
+Application tests cannot detect every installation or hook-setup failure. CI copies the Git index into a temporary directory and checks installation, unchanged source files, agent feedback, Git hooks, browser tests, and the production server there. Failed runs preserve the temporary app and diagnostic output for inspection.

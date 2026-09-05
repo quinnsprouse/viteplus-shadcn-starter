@@ -1,13 +1,11 @@
 // Project-owned Oxlint rules that keep agents inside Rodeo's patterns.
 // Loaded by `lint.jsPlugins` in vite.config.ts and by `plugins` in doctor.config.ts.
-// Every rule reports a fix, and none can be silenced inline: disable directives are
-// themselves banned, so exceptions live in `lint.overrides` where they are reviewed.
+// Inline disable directives are banned; exceptions live in `lint.overrides`.
 //
 // Rule docs: docs/agents/LINT_RULES.md
 
 import { definePlugin, defineRule } from "@oxlint/plugins";
 
-const EFFECT_HOOKS = new Set(["useEffect", "useLayoutEffect", "useInsertionEffect"]);
 const BROWSER_GLOBALS = new Set([
   "window",
   "document",
@@ -15,16 +13,6 @@ const BROWSER_GLOBALS = new Set([
   "sessionStorage",
   "navigator",
   "location",
-]);
-const SUBSCRIPTION_CALLS = new Set([
-  "setTimeout",
-  "setInterval",
-  "requestAnimationFrame",
-  "requestIdleCallback",
-  "addEventListener",
-  "subscribe",
-  "observe",
-  "on",
 ]);
 const DISABLE_DIRECTIVE = /^\s*((?:oxlint|eslint)-disable(?:-next-line|-line)?)/;
 const ARBITRARY_HEX = /\[#[0-9a-fA-F]{3,8}\]/;
@@ -106,63 +94,6 @@ function subtreeSome(node, predicate) {
   return false;
 }
 
-/** Top-level return statements of a function body, not descending into nested functions. */
-function topLevelReturns(body) {
-  const returns = [];
-  function visit(node) {
-    if (!node || typeof node.type !== "string") return;
-    if (node.type === "ReturnStatement") returns.push(node);
-    if (isFunction(node)) return;
-    for (const key of Object.keys(node)) {
-      if (key === "parent") continue;
-      const value = node[key];
-      if (Array.isArray(value)) value.forEach(visit);
-      else if (value && typeof value.type === "string") visit(value);
-    }
-  }
-  visit(body);
-  return returns;
-}
-
-const noEffectHooks = defineRule({
-  meta: {
-    type: "problem",
-    docs: {
-      description:
-        "Ban useEffect, useLayoutEffect, and useInsertionEffect through every import shape; use useMountEffect.",
-    },
-    messages: {
-      banned:
-        "{{name}} is banned. Derive state, load data in a route loader, handle events in handlers, or use useMountEffect from @/hooks/use-mount-effect for mount-only sync. See docs/agents/REACT_PATTERNS.md",
-    },
-    schema: [],
-  },
-  create(context) {
-    // Local names bound to an effect hook, so `import { useEffect as ue }` is caught too.
-    const aliases = new Map();
-    return {
-      ImportDeclaration(node) {
-        if (node.source.value !== "react") return;
-        for (const specifier of node.specifiers) {
-          if (
-            specifier.type === "ImportSpecifier" &&
-            specifier.imported.type === "Identifier" &&
-            EFFECT_HOOKS.has(specifier.imported.name)
-          ) {
-            aliases.set(specifier.local.name, specifier.imported.name);
-          }
-        }
-      },
-      CallExpression(node) {
-        const called = calleeName(node.callee);
-        if (!called) return;
-        const name = EFFECT_HOOKS.has(called) ? called : aliases.get(called);
-        if (name) context.report({ node: node.callee, messageId: "banned", data: { name } });
-      },
-    };
-  },
-});
-
 const noDisableDirectives = defineRule({
   meta: {
     type: "problem",
@@ -241,62 +172,6 @@ const serverFnRequiresValidator = defineRule({
                 candidate.property.name === "data",
             ));
         if (readsData) context.report({ node: node.callee, messageId: "missing" });
-      },
-    };
-  },
-});
-
-const mountEffectCleanup = defineRule({
-  meta: {
-    type: "problem",
-    docs: {
-      description:
-        "A useMountEffect callback that starts a timer, listener, or subscription must return a cleanup function, and must not be async.",
-    },
-    messages: {
-      async:
-        "useMountEffect callbacks cannot be async; an async function returns a Promise instead of a cleanup. Wrap the async work in an inner function and return a cleanup.",
-      cleanup:
-        "This useMountEffect starts {{call}} but never returns a cleanup function. Return () => {...} that clears the timer, removes the listener, or unsubscribes.",
-    },
-    schema: [],
-  },
-  create(context) {
-    return {
-      CallExpression(node) {
-        if (calleeName(node.callee) !== "useMountEffect") return;
-        const callback = node.arguments[0];
-        if (!callback || !isFunction(callback)) return;
-        if (callback.async) {
-          context.report({ node: callback, messageId: "async" });
-          return;
-        }
-        let subscription = null;
-        subtreeSome(callback.body, (candidate) => {
-          if (candidate.type !== "CallExpression") return false;
-          const name = calleeName(candidate.callee);
-          if (name && SUBSCRIPTION_CALLS.has(name)) {
-            subscription = name;
-            return true;
-          }
-          return false;
-        });
-        if (!subscription) return;
-        const returnsCleanup =
-          callback.body.type !== "BlockStatement"
-            ? isFunction(callback.body)
-            : topLevelReturns(callback.body).some(
-                (statement) =>
-                  statement.argument &&
-                  statement.argument.type !== "Literal" &&
-                  !(
-                    statement.argument.type === "Identifier" &&
-                    statement.argument.name === "undefined"
-                  ),
-              );
-        if (!returnsCleanup) {
-          context.report({ node: node.callee, messageId: "cleanup", data: { call: subscription } });
-        }
       },
     };
   },
@@ -414,7 +289,7 @@ const noModuleScopeBrowserGlobals = defineRule({
     type: "problem",
     docs: {
       description:
-        "Browser globals touched at module scope crash on the server during SSR; read them inside a handler, useMountEffect, or a typeof guard.",
+        "Browser globals touched at module scope crash on the server during SSR; read them inside a handler, an effect, or a typeof guard.",
     },
     messages: {
       ssr: "`{{name}}` is read at module scope, which throws during server rendering. Move the read into a function that runs in the browser, or guard it with typeof {{name}} !== 'undefined'.",
@@ -509,10 +384,8 @@ const noWindowNavigation = defineRule({
 export default definePlugin({
   meta: { name: "rodeo" },
   rules: {
-    "no-effect-hooks": noEffectHooks,
     "no-disable-directives": noDisableDirectives,
     "server-fn-requires-validator": serverFnRequiresValidator,
-    "mount-effect-cleanup": mountEffectCleanup,
     "no-hex-colors-in-classname": noHexColorsInClassName,
     "no-state-from-props": noStateFromProps,
     "no-module-scope-browser-globals": noModuleScopeBrowserGlobals,

@@ -16,10 +16,8 @@ const pluginPath = join(repoRoot, "lint", "rules.js");
 const oxlintBinary = resolve(dirname(require.resolve("oxlint/package.json")), "bin/oxlint");
 
 const ruleNames = [
-  "no-effect-hooks",
   "no-disable-directives",
   "server-fn-requires-validator",
-  "mount-effect-cleanup",
   "no-hex-colors-in-classname",
   "no-state-from-props",
   "no-module-scope-browser-globals",
@@ -96,32 +94,6 @@ function rulesHit(source: string, file?: string) {
   return lint(source, file).map((hit) => hit.rule);
 }
 
-describe("no-effect-hooks", () => {
-  it("catches every import shape that reaches an effect hook", () => {
-    const hits = lint(`
-import React, { useLayoutEffect, useEffect as ue } from "react";
-import * as R from "react";
-export function C() {
-  React.useEffect(() => {}, []);
-  R.useLayoutEffect(() => {}, []);
-  ue(() => {}, []);
-  useLayoutEffect(() => {}, []);
-  return null;
-}`);
-    expect(hits.filter((hit) => hit.rule === "no-effect-hooks").map((hit) => hit.line)).toEqual([
-      5, 6, 7, 8,
-    ]);
-  });
-
-  it("allows useMountEffect", () => {
-    expect(
-      rulesHit(`
-import { useMountEffect } from "@/hooks/use-mount-effect";
-export function C() { useMountEffect(() => {}); return null; }`),
-    ).toEqual([]);
-  });
-});
-
 describe("no-disable-directives", () => {
   it("reports every directive at the top of the file so no directive can hide itself", () => {
     const hits = lint(`/* oxlint-disable */
@@ -162,43 +134,6 @@ export const a = createServerFn({ method: "POST" }).validator((d: unknown) => d)
 export const b = createServerFn({ method: "POST" }).inputValidator((d: unknown) => d).handler(({ data }) => data);
 export const c = createServerFn({ method: "GET" }).handler(() => "ok");
 export const d = createServerFn({ method: "GET" }).handler(({ context }) => context);`),
-    ).toEqual([]);
-  });
-});
-
-describe("mount-effect-cleanup", () => {
-  it("requires a cleanup when a timer, listener, or subscription starts", () => {
-    expect(
-      rulesHit(`
-import { useMountEffect } from "@/hooks/use-mount-effect";
-export function C() {
-  useMountEffect(() => { setTimeout(() => {}, 1); });
-  useMountEffect(() => { window.addEventListener("resize", () => {}); });
-  useMountEffect(() => { function tick() { setInterval(tick, 1); } tick(); return undefined; });
-  return null;
-}`),
-    ).toEqual(["mount-effect-cleanup", "mount-effect-cleanup", "mount-effect-cleanup"]);
-  });
-
-  it("rejects async callbacks", () => {
-    expect(
-      rulesHit(`
-import { useMountEffect } from "@/hooks/use-mount-effect";
-export function C() { useMountEffect(async () => { await Promise.resolve(); }); return null; }`),
-    ).toEqual(["mount-effect-cleanup"]);
-  });
-
-  it("allows callbacks that return a cleanup or start nothing", () => {
-    expect(
-      rulesHit(`
-import { useMountEffect } from "@/hooks/use-mount-effect";
-export function C() {
-  useMountEffect(() => { const id = setTimeout(() => {}, 1); return () => clearTimeout(id); });
-  useMountEffect(() => { const sub = bus.subscribe(); return sub.unsubscribe; });
-  useMountEffect(() => { document.title = "ready"; });
-  return null;
-}
-declare const bus: { subscribe(): { unsubscribe(): void } };`),
     ).toEqual([]);
   });
 });

@@ -1,58 +1,25 @@
-# UI and Motion
+# UI and motion
+
+## Components and icons
+
+- shadcn/ui is configured for Base UI with the `base-mira` style. Check `src/components/ui/` before adding a component with `npx shadcn@latest add <component>`.
+- Import icons from `@/components/icons` and render them with its `Icon` wrapper.
+- Give icon-only buttons an accessible name and set button types explicitly.
+- Use [React patterns](REACT_PATTERNS.md) for component composition and state.
 
 ## Styling
 
-- Tailwind CSS v4 utility classes only. Use `cn()` from `@/lib/utils` to compose.
-- Always use theme tokens (`bg-background`, `text-foreground`, `border-border`) — never ad-hoc hex colors. `rodeo/no-hex-colors-in-classname` rejects `[#hex]` values in `className` outside `src/components/ui/`.
-- Brand accent: `text-brand`, `bg-brand`, `border-brand`, and `brand-soft` for the lighter tint, declared as `--color-brand*` in `src/styles/app.css`. Add a token there when a new color is needed.
-- Dark mode via `.dark` class on `<html>`. Use CSS variables for theme, not Tailwind `dark:` modifier where possible.
-- Use shadows instead of borders for subtle separation. For hairline borders: `border` + `border-color` with opacity.
+- Use Tailwind v4 classes and `cn()` from `@/lib/utils`.
+- Use theme tokens such as `bg-background`, `text-foreground`, and `border-border`. Add new colors in `src/styles/app.css`; arbitrary hex colors in `className` fail lint outside the UI kit.
+- Brand tokens include `text-brand`, `bg-brand`, `border-brand`, and `bg-brand-soft`.
+- Dark mode uses `.dark` on `<html>`. Prefer semantic tokens that respond to the theme.
+- DM Sans and JetBrains Mono are loaded in `src/routes/__root.tsx` and mapped to `--font-sans` and `--font-mono` in `app.css`.
 
-## Components
+## Motion and layout
 
-- shadcn/ui with Base UI primitives (`base-mira` style) in `src/components/ui/`.
-- Prefer existing shadcn components before building custom ones.
-- Add new: `npx shadcn@latest add <component>`.
-- Use `AlertDialog` (not `Dialog`) for destructive/irreversible actions.
-- Icon-only buttons must have `aria-label`.
-
-## React Patterns
-
-- Composition over configuration — prefer `children` over render props.
-- Avoid boolean prop proliferation (`<Button primary>` vs `<Button variant="primary">`). Use explicit variant props.
-- Minimize re-renders: lift state only as high as needed, keep expensive components as `children` not inline.
-- Never use `transition: all` — always specify exact properties (`transition-colors`, `transition-opacity`).
-
-## Motion
-
-- Import from `motion/react` (not `framer-motion`).
-- Only animate compositor properties: `transform` and `opacity`. Never animate `width`, `height`, `top`, `left`.
-- Easing: `ease-out` for entrances, `ease-in` for exits, `ease-in-out` for state changes. Never `linear` for UI motion.
-- Duration: feedback < 200ms, entrances 200-500ms. Scale with element size — larger = slightly longer.
-- Start near 1 for scale (`0.95`+), never `scale(0)`.
-- Stagger delays: 30-80ms between items.
-- Respect `useReducedMotion()` — skip or simplify all motion.
-
-## Typography
-
-- Use `text-balance` on headings, `text-pretty` on body text.
-- Use `tabular-nums` for any numbers that change or align in columns.
-- Minimum `16px` font on inputs (prevents iOS zoom).
-- Use `text-ellipsis` + `overflow-hidden` for single-line truncation, never uncontrolled overflow.
-
-## Layout
-
-- Use `min-h-dvh` not `min-h-screen` (accounts for mobile browser chrome).
-- Fixed z-index scale: base 0, dropdown 10, sticky 20, overlay 30, modal 40, toast 50.
-- Account for safe areas on mobile: `env(safe-area-inset-*)`.
-
-## Icons
-
-- Import from `@/components/icons` which wraps Hugeicons Free icons.
-- Use the `Icon` wrapper for consistent size/stroke.
-- Pattern: `import { Icon, SomeIcon } from "@/components/icons"`.
-
-## Fonts
-
-- DM Sans (body), JetBrains Mono (code) — loaded in `__root.tsx`.
-- Registered as `--font-sans` and `--font-mono` in `app.css`.
+- Import animation components from `motion/react`.
+- Prefer animating `transform` and `opacity`; specify transition properties instead of `transition: all`.
+- Respect reduced-motion preferences. The existing `usePrefersReducedMotion` hook handles the browser subscription and server snapshot.
+- Use `tabular-nums` for changing or column-aligned numbers.
+- Keep input fonts at least `16px` to avoid iOS focus zoom.
+- Check narrow viewports for overflow, use dynamic viewport units for full-height layouts, and account for safe areas when placing fixed controls.

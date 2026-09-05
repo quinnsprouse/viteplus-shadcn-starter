@@ -1,8 +1,6 @@
-import { AnimatePresence, LazyMotion, m } from "motion/react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { Icon, Tick02Icon, Copy01Icon } from "@/components/icons";
-import { useMountEffect } from "@/hooks/use-mount-effect";
 import { cn } from "@/lib/utils";
 
 interface SnippetProps {
@@ -15,35 +13,41 @@ interface SnippetProps {
 }
 
 export function Snippet({ text, prompt = true, shimmer = false, className, onCopy }: SnippetProps) {
-  const [copied, setCopied] = useState(false);
+  const [status, setStatus] = useState<"idle" | "copied" | "failed">("idle");
+  const copied = status === "copied";
   const timeoutRef = useRef<number | null>(null);
   const lines = Array.isArray(text) ? text : [text];
 
-  useMountEffect(() => {
+  useEffect(() => {
     return () => {
       if (timeoutRef.current) {
         window.clearTimeout(timeoutRef.current);
       }
     };
-  });
+  }, []);
 
   const handleCopy = async () => {
     const payload = lines.join("\n");
-    if (typeof navigator === "undefined" || !navigator.clipboard?.writeText) {
+    if (timeoutRef.current) {
+      window.clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+    setStatus("idle");
+    if (!navigator.clipboard?.writeText) {
+      setStatus("failed");
       return;
     }
 
     try {
       await navigator.clipboard.writeText(payload);
-      setCopied(true);
-      onCopy?.();
-      if (timeoutRef.current) {
-        window.clearTimeout(timeoutRef.current);
-      }
-      timeoutRef.current = window.setTimeout(() => setCopied(false), 1500);
     } catch {
-      // Silently fail
+      setStatus("failed");
+      return;
     }
+
+    setStatus("copied");
+    timeoutRef.current = window.setTimeout(() => setStatus("idle"), 1500);
+    onCopy?.();
   };
 
   return (
@@ -77,37 +81,26 @@ export function Snippet({ text, prompt = true, shimmer = false, className, onCop
       <button
         type="button"
         onClick={() => void handleCopy()}
-        className="relative flex-none rounded-md p-3 text-muted-foreground transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-[#863bff]/50 focus-visible:outline-none"
+        className="relative flex-none rounded-md p-3 text-muted-foreground transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-brand/50 focus-visible:outline-none"
         aria-label={copied ? "Copied" : "Copy to clipboard"}
       >
-        <div className="relative flex size-5 items-center justify-center">
-          <LazyMotion features={() => import("motion/react").then((mod) => mod.domAnimation)}>
-            <AnimatePresence mode="popLayout" initial={false}>
-              <m.span
-                key={copied ? "check" : "copy"}
-                initial={{ opacity: 0, scale: 0.5, filter: "blur(4px)" }}
-                animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
-                exit={{ opacity: 0, scale: 0.5, filter: "blur(4px)" }}
-                transition={{ type: "spring", duration: 0.3, bounce: 0 }}
-                className={cn(
-                  "absolute inset-0 flex items-center justify-center rounded-full",
-                  copied && "bg-emerald-500/15",
-                )}
-              >
-                <Icon
-                  icon={copied ? Tick02Icon : Copy01Icon}
-                  className={cn(
-                    "size-4",
-                    copied && "size-3 text-emerald-600 dark:text-emerald-400",
-                  )}
-                  strokeWidth={copied ? 2.5 : 1.5}
-                  aria-hidden="true"
-                />
-              </m.span>
-            </AnimatePresence>
-          </LazyMotion>
-        </div>
+        <Icon
+          icon={copied ? Tick02Icon : Copy01Icon}
+          className={cn("size-5", copied && "text-emerald-600 dark:text-emerald-400")}
+          aria-hidden="true"
+        />
       </button>
+      <output
+        className={
+          status === "failed" ? "absolute top-full left-0 mt-1 text-xs text-destructive" : "sr-only"
+        }
+      >
+        {status === "failed"
+          ? "Couldn't copy. Select and copy the command manually."
+          : copied
+            ? "Copied to clipboard."
+            : ""}
+      </output>
     </div>
   );
 }

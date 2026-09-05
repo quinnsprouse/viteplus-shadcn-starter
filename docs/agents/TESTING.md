@@ -1,22 +1,22 @@
 # Testing
 
-## Feedback Loop
+## Checks
 
-Use the smallest Verification Profile that proves the change:
+Use the smallest check that proves the change:
 
-| Profile | Command              | Guarantees                                                 |
-| ------- | -------------------- | ---------------------------------------------------------- |
-| Fast    | `npm run check`      | format, lint, types, unit tests                            |
-| Push    | `npm run check:push` | Fast, production build, dead code, Playwright              |
-| CI      | `npm run check:ci`   | Push, coverage, clean Starter Journey, React Doctor, audit |
+| Profile | Command              | Checks                                                           |
+| ------- | -------------------- | ---------------------------------------------------------------- |
+| Fast    | `npm run check`      | toolchain, format, lint, types, unit tests                       |
+| Push    | `npm run check:push` | Fast, production build, dead code, Playwright                    |
+| CI      | `npm run check:ci`   | Push, coverage, clean template installation, React Doctor, audit |
 
-The profiles live in the Vite Task graph in `vite.config.ts`. Cached tasks use explicit inputs so verification also works in restricted agent sandboxes.
+The checks live in the Vite Task graph in `vite.config.ts`. Cached tasks use explicit inputs so verification also works in restricted agent sandboxes.
 
 ## Test Scope
 
 Don't test what static analysis catches. Oxlint + TypeScript own type errors, unused vars, hook deps, formatting. Tests own **runtime behavior through public interfaces**.
 
-Project lint rules are the exception: `lint/rules.test.ts` runs each `rodeo/*` rule through the real Oxlint binary with a failing and a passing fixture, and `.claude/hooks/pre-tool-guard.test.ts` checks every guard decision. Both run in the Fast Profile.
+Lint enforcement is the exception: `lint/rules.test.ts` runs each `rodeo/*` rule through the real Oxlint binary, and `lint/policy.test.ts` tests the actual project's configuration with valid and invalid React, TypeScript, and browser code. `.claude/hooks/pre-tool-guard.test.ts` checks every guard decision. These run in `npm run check`.
 
 ## Test Design
 
@@ -36,13 +36,14 @@ Project lint rules are the exception: `lint/rules.test.ts` runs each `rodeo/*` r
 
 - Playwright with Chromium. Tests in `e2e/`.
 - Run `npm run test:e2e:install` once before the first browser test or push.
-- The Push and CI profiles exercise the built Nitro server; direct `npm run test:e2e` uses the development server for a fast local loop.
+- All browser tests exercise the built Nitro server. `npm run test:e2e` builds first; Push and CI reuse the build from the task graph.
+- `npm run typecheck` includes `e2e/`. Playwright runs TypeScript without checking types.
 - Capture both `pageerror` events and browser `console.error` messages; assert zero errors at test end.
 - Use accessible selectors: `page.getByRole(...)`, `page.getByText(...)`.
 
-## Starter Journey
+## Clean template test
 
-`npm run test:template` tests the staged distribution artifact in a clean temporary directory. It performs `npm ci`, proves install and hooks do not mutate the distributed tree, exercises portable Edit Feedback (format and lint), checks the Tool Guard, installs Chromium, executes the actual pre-push hook, and boots the production Nitro server.
+`npm run test:template` tests the staged files in a clean temporary directory. It performs `npm ci`, checks that installation and hooks leave those files unchanged, exercises post-edit formatting and lint, checks tool-call restrictions, installs Chromium, executes the actual pre-push hook, and boots the production Nitro server.
 
 Stage intended starter changes before running it. Failures preserve the temporary app automatically and write diagnostics to `test-results/starter-journey/`; `KEEP_TEMPLATE_TEST=1` also preserves successful runs.
 
@@ -61,4 +62,4 @@ Stage intended starter changes before running it. Failures preserve the temporar
 
 ## Dead Code
 
-- `npm run knip` detects unused exports, dependencies, and files; it is part of the Push Profile.
+- `npm run knip` detects unused exports, dependencies, and files; it runs in `npm run check:push`.

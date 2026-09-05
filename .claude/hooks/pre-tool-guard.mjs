@@ -58,7 +58,7 @@ const guardedCommands = [
     test: /\bnpx\s+(?:oxlint|oxfmt|vitest|eslint|prettier)\b/,
     decision: "deny",
     reason:
-      "Use the Vite+ wrappers: `vp lint`, `vp fmt`, `vp test`. Direct oxlint/vitest calls skip the project configuration.",
+      "Use the project commands: `vp lint`, `vp fmt`, `npm run test`. One-off tool downloads can bypass the project's pinned versions.",
   },
 ];
 

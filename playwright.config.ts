@@ -21,12 +21,8 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: process.env.RODEO_E2E_PRODUCTION
-      ? "npm run start"
-      : "vp dev --host 127.0.0.1 --port 43111",
-    env: process.env.RODEO_E2E_PRODUCTION
-      ? { HOST: "127.0.0.1", NODE_ENV: "production", PORT: "43111" }
-      : undefined,
+    command: "npm run start",
+    env: { HOST: "127.0.0.1", NODE_ENV: "production", PORT: "43111" },
     url: "http://127.0.0.1:43111",
     reuseExistingServer: false,
     timeout: 120_000,

@@ -1,18 +1,21 @@
-import { useState } from "react";
+import { useSyncExternalStore } from "react";
 
-import { useMountEffect } from "./use-mount-effect";
+const query = "(prefers-reduced-motion: reduce)";
+
+function subscribe(onChange: () => void) {
+  const media = window.matchMedia(query);
+  media.addEventListener("change", onChange);
+  return () => media.removeEventListener("change", onChange);
+}
+
+function getSnapshot() {
+  return window.matchMedia(query).matches;
+}
+
+function getServerSnapshot() {
+  return false;
+}
 
 export function usePrefersReducedMotion() {
-  const [reduced, setReduced] = useState(false);
-
-  useMountEffect(() => {
-    const query = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const update = () => setReduced(query.matches);
-
-    update();
-    query.addEventListener("change", update);
-    return () => query.removeEventListener("change", update);
-  });
-
-  return reduced;
+  return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 }

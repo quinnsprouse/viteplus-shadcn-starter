@@ -20,9 +20,6 @@ test("home page renders and copy flow works", async ({ page }) => {
   await page.goto("/");
 
   await expect(page.getByRole("img", { name: "Rodeo" })).toBeVisible();
-  await expect
-    .poll(() => page.evaluate(() => document.fonts.check('128px "Yellowtail"')))
-    .toBe(true);
   await expect(page.getByLabel("agents.")).toBeVisible();
   await expect(page.getByRole("link", { name: /github/i })).toBeVisible();
   await expect(page.getByText(installCommand)).toBeVisible();
@@ -30,7 +27,8 @@ test("home page renders and copy flow works", async ({ page }) => {
 
   const copyButton = page.getByRole("button", { name: "Copy to clipboard" });
   await copyButton.click();
-  await expect(copyButton).toBeVisible();
+  await expect(page.getByRole("button", { name: "Copied", exact: true })).toBeVisible();
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(installCommand);
   expect(browserErrors).toHaveLength(0);
 });
 
@@ -65,12 +63,42 @@ test("home page fits on mobile", async ({ page }) => {
 
 test("reduced motion shows content immediately", async ({ page }) => {
   const browserErrors = trackBrowserErrors(page);
+  await page.clock.install();
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
 
   await expect(page.getByRole("heading", { name: /built for/i })).toBeVisible();
   await expect(page.getByText(installCommand)).toBeVisible();
+  await page.clock.fastForward(6000);
+  await expect(page.getByRole("heading", { name: /built for/i })).toHaveText("Built for agents.");
   expect(browserErrors).toHaveLength(0);
+});
+
+test("motion responds when the system preference changes", async ({ page }) => {
+  const browserErrors = trackBrowserErrors(page);
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.goto("/");
+
+  const heading = page.getByRole("heading", { name: /built for/i });
+  await expect(heading).toHaveText("Built for humans.");
+
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await expect(heading).toHaveText("Built for agents.");
+
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await expect(heading).toHaveText("Built for humans.");
+  expect(browserErrors).toHaveLength(0);
+});
+
+test.describe("server-rendered introduction", () => {
+  test.use({ javaScriptEnabled: false });
+
+  test("shows the introduction without flashing the static wordmark", async ({ page }) => {
+    await page.goto("/");
+    await expect(page.getByText("Rodeo", { exact: true })).toHaveCount(0);
+    await expect(page.getByRole("heading", { name: /built for/i })).toHaveCSS("opacity", "1");
+    await expect(page.getByText(installCommand)).toBeVisible();
+  });
 });
 
 test("unknown routes return a real 404 inside the application shell", async ({ page }) => {

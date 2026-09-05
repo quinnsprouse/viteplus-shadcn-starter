@@ -210,7 +210,7 @@ try {
   const lintProbe = join(appRoot, "src", "lint-probe.tsx");
   writeFileSync(
     lintProbe,
-    'import React from "react";\nexport function Probe() {\n  React.useEffect(() => {}, []);\n  return null;\n}\n',
+    'import { useEffect } from "react";\nexport function Probe({ title }: { title: string }) {\n  useEffect(() => { document.title = title; }, []);\n  return null;\n}\n',
   );
   const lintFeedback = run(process.execPath, [".claude/hooks/post-edit.mjs"], {
     capture: true,
@@ -220,7 +220,7 @@ try {
       tool_input: { file_path: lintProbe },
     }),
   });
-  assert.match(lintFeedback.stdout, /rodeo\(no-effect-hooks\)/);
+  assert.match(lintFeedback.stdout, /react-hooks-js\(exhaustive-deps\)/);
   rmSync(lintProbe);
 
   // The Tool Guard must refuse a hook bypass and stay silent for ordinary commands.

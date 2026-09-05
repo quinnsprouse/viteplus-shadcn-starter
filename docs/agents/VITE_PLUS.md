@@ -1,21 +1,8 @@
 # Vite+ Toolchain
 
-`vp` is the global CLI wrapping Vite 8, Rolldown, Vitest, Oxlint, Oxfmt, and Vite Task.
+The project-installed `vp` CLI wraps Vite 8, Rolldown, Vitest, Oxlint, Oxfmt, and Vite Task.
 
-## Commands
-
-| Task                      | Command                          |
-| ------------------------- | -------------------------------- |
-| Dev server                | `vp dev`                         |
-| Format + lint + typecheck | `vp check` (`--fix` to auto-fix) |
-| Format                    | `vp fmt`                         |
-| Lint                      | `vp lint`                        |
-| Tests                     | `vp test run`                    |
-| Cached task               | `vp run <task>`                  |
-| Build                     | `vp build`                       |
-| Add dependency            | `vp add <pkg>`                   |
-| One-off binary            | `vp dlx <pkg>`                   |
-| Tool versions             | `vp --version`                   |
+Use the [package scripts](../../package.json) for development and verification. The usual tool commands are `vp dev`, `vp check`, `vp fmt`, `vp lint`, and `vp test`; use `--help` for their options.
 
 ## Import Convention
 
@@ -32,16 +19,15 @@ Fast, Push, and CI profiles are defined under `run.tasks` in `vite.config.ts`. P
 
 Keep cached verification tasks on explicit `input` globs. Vite Task's automatic file tracer may be unavailable in restricted agent sandboxes, and broad directory tracing makes disposable files invalidate otherwise reusable results.
 
-Call Verification Profiles through their `npm run check*` scripts. The verification adapter keeps caching enabled normally and retries without cache only when a restricted sandbox blocks Vite Task communication.
+Include custom lint rules, hook scripts and tests, and tool configuration in those globs. With explicit inputs, changes to omitted files cannot invalidate a cached pass. The fast profile runs `scripts/check-toolchain.mjs` to catch incompatible version pins before lint or tests run.
+
+Run verification through the `npm run check*` scripts. The verification adapter keeps caching enabled normally and retries without cache only when a restricted sandbox blocks Vite Task communication.
 
 ## Pitfalls
 
 - Vite+ 0.3 pins a direct `vitest` package and override to the bundled runner version. Keep that exact lockstep; do not install oxlint, oxfmt, or tsdown directly.
 - `vp dev` runs the Vite dev server, not a `package.json` script. Use `vp run dev` for custom scripts.
-- Use `vp dlx` instead of `npx`.
 - `vp vitest` / `vp oxlint` don't exist — use `vp test` / `vp lint`.
 - Run coverage through `npm run test:coverage`; the coverage provider is pinned to Vite+'s Vitest version.
 
-## Pre-commit
-
-`vp config --hooks-dir .vite-hooks` installs the sole Git hook adapter. `vp staged` runs `vp check --fix` on staged files using the `staged` configuration in `vite.config.ts`.
+See [Testing](TESTING.md#git-hooks) for Git hook installation and staged checks.

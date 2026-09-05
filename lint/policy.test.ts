@@ -29,10 +29,12 @@ function lint(source: string) {
   return spawnSync(process.execPath, [vp, "lint", "--no-ignore", "--format", "json", target], {
     cwd: repoRoot,
     encoding: "utf8",
+    timeout: 20_000,
   });
 }
 
-describe("Lint policy", () => {
+// Compiler startup can exceed the unit-test timeout while CI runs coverage and builds.
+describe("Lint policy", { timeout: 30_000 }, () => {
   it.each([
     {
       name: "unexplained empty catch blocks",

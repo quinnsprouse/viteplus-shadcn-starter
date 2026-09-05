@@ -1,121 +1,66 @@
-# React Patterns
+# React patterns
 
-## No Direct useEffect
+## Effects synchronize with external systems
 
-`useEffect`, `useLayoutEffect`, and `useInsertionEffect` are banned via lint rule in every import shape, including `React.useEffect` and aliases. They cause race conditions, infinite loops, and implicit control flow that's hard to trace. For the rare mount-sync case, use `useMountEffect()` from `@/hooks/use-mount-effect`. Inline disable comments are also lint errors; see [Lint Rules](LINT_RULES.md).
+Use React's `useEffect` for timers, subscriptions, and imperative browser APIs. Derive values during render, handle user actions in event handlers, and load route data with TanStack loaders. See [You Might Not Need an Effect](https://react.dev/learn/you-might-not-need-an-effect).
 
-### What to do instead
-
-**Derive state, don't sync it:**
+Keep the effect callback inline and include every reactive value it reads in the dependency array. An empty array is correct only when the effect reads no reactive values. Do not hide dependencies behind a mount-only wrapper or suppress a dependency warning.
 
 ```tsx
-// BAD — extra render cycle, loop risk
-const [filtered, setFiltered] = useState([]);
-useEffect(() => setFiltered(items.filter(pred)), [items]);
-
-// GOOD — compute inline
-const filtered = items.filter(pred);
+useEffect(() => {
+  const connection = createConnection(roomId);
+  connection.connect();
+  return () => connection.disconnect();
+}, [roomId]);
 ```
 
-**Use route data:**
+Cleanup must undo setup before dependencies change and when the component unmounts. Clear timers, remove listeners, and unsubscribe from external systems. React Strict Mode replays setup and cleanup in development, so both must be safe to repeat. An effect callback cannot be async; start asynchronous work inside it and cancel or ignore stale results during cleanup.
+
+For browser state such as media queries, use [useSyncExternalStore](https://react.dev/reference/react/useSyncExternalStore) with a server snapshot that matches hydration. See `src/hooks/use-prefers-reduced-motion.ts`.
+
+## Prefer direct code
+
+Compute derived values during render:
 
 ```tsx
-// BAD — race condition, no caching
-useEffect(() => {
-  fetch(url).then(setData);
-}, [id]);
+const filtered = items.filter(predicate);
+```
 
-// GOOD — load before rendering
+Load route data before rendering:
+
+```tsx
 export const Route = createFileRoute("/items/$id")({
   loader: ({ params }) => getItem({ data: { id: params.id } }),
   component: ItemPage,
 });
 ```
 
-**Handle events in handlers:**
+Run user actions in handlers:
 
 ```tsx
-// BAD — flag → effect → reset flag
-useEffect(() => {
-  if (submitted) {
-    save();
-    setSubmitted(false);
-  }
-}, [submitted]);
-
-// GOOD — direct handler
-<button onClick={() => save()}>Save</button>;
+<button type="button" onClick={handleSave}>
+  Save
+</button>
 ```
 
-**Reset with `key`, not effect dependency choreography:**
+When an entity's identity changes, use a key to reset its component state:
 
 ```tsx
-// BAD
-useEffect(() => {
-  reset();
-  loadVideo(id);
-}, [id]);
-
-// GOOD — forces clean remount
-<VideoPlayer key={videoId} videoId={videoId} />;
+<Editor key={document.id} initialValue={document.content} />
 ```
 
-**Mount-only external sync → `useMountEffect`:**
+Avoid copying props into state that must stay synchronized. Props named `initial*` or `default*` may seed intentionally independent state. Keep browser globals inside functions that run in the browser, not at module scope where SSR evaluates them.
 
-```tsx
-useMountEffect(() => {
-  const sub = externalSystem.subscribe();
-  return () => sub.unsubscribe();
-});
-```
+## Enforcement
 
-Any `useMountEffect` that starts a timer, listener, or subscription must return a cleanup, and the callback cannot be `async` (`rodeo/mount-effect-cleanup`).
+`npm run check` and the commit checks run the configured React rules. Missing dependencies, conditional hooks, synchronous state updates in effects, render-time mutations, and inline lint suppressions fail the gate. [React's lint reference](https://react.dev/reference/eslint-plugin-react-hooks) explains the standard rules; [Lint rules](LINT_RULES.md) documents project restrictions and file-scoped exceptions.
 
-**Don't seed state from a prop:**
+Lint cannot prove that every subscription is cleaned up or that an effect is needed. Review effects for external synchronization, complete cleanup, and stale asynchronous results. Test observable behavior when dependencies change or the component unmounts.
 
-```tsx
-// BAD — `value` changes, `draft` does not (rodeo/no-state-from-props)
-const [draft, setDraft] = useState(value);
+## Component design
 
-// GOOD — derive, lift, or remount
-const draft = value;
-<Editor key={docId} initialValue={value} />; // props named initial*/default* are exempt
-```
-
-**Browser globals belong inside functions:**
-
-```tsx
-// BAD — throws during SSR (rodeo/no-module-scope-browser-globals)
-const saved = localStorage.getItem("draft");
-
-// GOOD
-function readDraft() {
-  return localStorage.getItem("draft");
-}
-```
-
-### Conditional mounting over effect guards
-
-```tsx
-// BAD — guard inside effect
-useEffect(() => {
-  if (!loading) init();
-}, [loading]);
-
-// GOOD — mount only when ready
-if (loading) return <Spinner />;
-return <Ready />; // useMountEffect inside Ready
-```
-
-## Component Design
-
-- Composition over configuration — prefer `children` over render props.
-- Explicit variant props over boolean proliferation (`variant="primary"` not `primary`).
-- Lift state only as high as needed. Keep expensive components as `children`, not inline JSX.
-- Use `key` to force remounts when identity changes (user ID, entity ID).
-
-## Performance
-
-- Only animate `transform` and `opacity`. Never `width`, `height`, `top`, `left`.
-- Never use `transition: all` — specify exact properties.
-- Use `useMemo`/`useCallback` only when profiling shows a real problem, not preemptively.
+- Prefer composition with `children` over accumulating configuration props.
+- Use explicit variants when booleans describe mutually exclusive states.
+- Lift state only as high as needed.
+- Use `useMemo` and `useCallback` when measured performance or an API's identity requirements justify them.
+- Prefer animating `transform` and `opacity`; avoid `transition: all`.

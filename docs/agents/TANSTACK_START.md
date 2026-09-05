@@ -22,12 +22,6 @@
 - Never fetch in `useEffect` what could be loaded in a route loader.
 - Remember that route loaders are isomorphic. Move secrets and privileged work behind server functions or server-only modules.
 
-## Type Safety
-
-- Avoid `any` unless unavoidable and justified.
-- Use `type` imports for type-only values: `import type { Foo } from "..."`.
-- Route export allow-list: `Route`, `loader`, `beforeLoad`, `head`, `meta`, `links`, `headers`, `pendingComponent`, `errorComponent`, `notFoundComponent`.
-
 ## SSR
 
 - Nitro handles the server engine (via `nitro/vite` plugin).
@@ -35,10 +29,15 @@
 - Keep `verbatimModuleSyntax` disabled and import protection fatal so server-only code cannot leak into client bundles.
 - Use `*.server.*` and `*.client.*` filenames (or the matching server-only/client-only markers) at environment boundaries.
 - Production: `node .output/server/index.mjs`.
-- URL should always reflect application state — use search params, not hidden state.
 - Navigate with `useNavigate()` or `<Link>`, never `window.location` (`rodeo/no-window-navigation`).
 - Never touch `window`, `document`, or storage at module scope; modules load on the server too (`rodeo/no-module-scope-browser-globals`).
 
-## Executable Example
+## Full-stack example
 
-See `docs/agents/FULL_STACK_EXAMPLE.md` for the homepage's tested search state → loader dependency → server function → rendered result → error UI flow. Copy that vertical shape before inventing a new data-loading pattern.
+The homepage demonstrates typed URL state, a route loader, a server function, and recovery from an error:
+
+1. `src/routes/index.tsx` validates the `demo` search parameter and includes it in `loaderDeps` so it affects the loader cache key.
+2. The loader awaits a private `createServerFn`; `src/lib/starter-status.ts` validates input and returns the result or throws.
+3. The loader catches the requested `?demo=error` failure and returns a typed result for the route's recovery UI.
+
+Keep shared logic in `src/lib/` and export only supported route symbols from route files. `src/lib/starter-status.test.ts` tests the shared logic; `e2e/smoke.spec.ts` tests the rendered result and error recovery. When adapting the example, put shareable state in the URL and test observable behavior through the same interface the route uses.

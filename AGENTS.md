@@ -5,7 +5,9 @@ Agent-ready starter kit: Vite+ + TanStack Start + React 19, with shadcn/ui (Base
 - Push gate: `npm run check:push` (check + build + dead code + Playwright e2e)
 - CI gate: `npm run check:ci` (push + clean template journey + React Doctor + audit)
 - React health: `npm run doctor` (react-doctor scan — security, performance, correctness, architecture; also runs on staged files at commit and in CI)
+- React policy: use effects for external synchronization with complete dependencies and cleanup; derive values during render and handle user actions in handlers. Standard React lint rules enforce this where static analysis can.
 - Lint policy: warnings fail, inline `oxlint-disable` / `eslint-disable` comments are errors; exceptions go in `lint.overrides` in `vite.config.ts` with a reason
+- Fix the cause of a diagnostic; demonstrate a false positive with a minimal example before changing a rule or adding an exception. Prefer built-in rules and compiler checks over custom lint code.
 - Dev: `npm run dev` (localhost:3000)
 - Build: `npm run build`
 - Hook recovery: `npm run setup` (after `git init`)
@@ -24,12 +26,10 @@ Conventional Commits enforced by commitlint. `type(scope): description`. No Co-A
 
 Open these only when relevant:
 
-- [Domain language](CONTEXT.md) — Starter Journey, Starter Contract, Feedback Loop, and Verification Profiles
 - [Architecture decisions](docs/adr/README.md) — load-bearing decisions and the concise ADR format
 - [Vite+ Toolchain](docs/agents/VITE_PLUS.md) — `vp` commands, common pitfalls, import conventions
-- [TanStack Start Patterns](docs/agents/TANSTACK_START.md) — routing, server functions, type safety
-- [Full-stack Example](docs/agents/FULL_STACK_EXAMPLE.md) — executable loader → server function → UI → error flow
+- [TanStack Start Patterns](docs/agents/TANSTACK_START.md) — routing, server functions, and the full-stack example
 - [UI and Motion](docs/agents/UI_MOTION.md) — Tailwind tokens, Motion library, icon imports
-- [React Patterns](docs/agents/REACT_PATTERNS.md) — no useEffect, derived state, component design
+- [React Patterns](docs/agents/REACT_PATTERNS.md) — effects, derived state, component design
 - [Lint Rules](docs/agents/LINT_RULES.md) — what the gate bans, the project `rodeo/*` rules, how to add one
 - [Testing](docs/agents/TESTING.md) — feedback loop, test scope policy, pre-commit guardrails

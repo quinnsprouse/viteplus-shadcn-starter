@@ -16,14 +16,29 @@ describe("Snippet", () => {
     expect(screen.getByText("line two")).toBeInTheDocument();
   });
 
-  it("has a copy button", async () => {
+  it("explains how to copy when the clipboard API is unavailable", async () => {
     const user = userEvent.setup();
     render(<Snippet text="npm install" />);
 
-    const button = screen.getByRole("button", { name: /copy/i });
-    expect(button).toBeInTheDocument();
-    // Click should not throw even without clipboard API
-    await user.click(button);
+    Object.defineProperty(navigator, "clipboard", { configurable: true, value: undefined });
+    await user.click(screen.getByRole("button", { name: /copy/i }));
+    expect(screen.getByRole("status")).toHaveTextContent("Select and copy the command manually.");
+  });
+
+  it("reports denied clipboard access and allows a retry", async () => {
+    const user = userEvent.setup();
+    const writeText = vi
+      .fn<(text: string) => Promise<void>>()
+      .mockRejectedValueOnce(new DOMException("Permission denied", "NotAllowedError"))
+      .mockResolvedValue(undefined);
+    Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText } });
+    render(<Snippet text={["npm ci", "npm run dev"]} />);
+
+    await user.click(screen.getByRole("button", { name: /copy/i }));
+    expect(screen.getByRole("status")).toHaveTextContent("Couldn't copy.");
+    await user.click(screen.getByRole("button", { name: /copy/i }));
+    expect(writeText).toHaveBeenLastCalledWith("npm ci\nnpm run dev");
+    expect(screen.getByRole("status")).toHaveTextContent("Copied to clipboard.");
   });
 
   it("copies text to the clipboard", async () => {

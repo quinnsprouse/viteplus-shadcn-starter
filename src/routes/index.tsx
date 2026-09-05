@@ -1,9 +1,7 @@
 import type { IconSvgElement } from "@hugeicons/react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
-import { Calligraph } from "calligraph";
-import { LazyMotion, m } from "motion/react";
-import { useRef, useState } from "react";
+import { LazyMotion } from "motion/react";
 
 import {
   AiBookIcon,
@@ -16,9 +14,10 @@ import {
   Shield01Icon,
   Target01Icon,
 } from "@/components/icons";
+import { RotatingWord } from "@/components/rotating-word";
 import { TerminalDemo } from "@/components/terminal-demo";
 import { Snippet } from "@/components/ui/snippet";
-import { useMountEffect } from "@/hooks/use-mount-effect";
+import { Wordmark } from "@/components/wordmark";
 import { usePrefersReducedMotion } from "@/hooks/use-prefers-reduced-motion";
 import { resolveStarterStatus, validateStarterStatusInput } from "@/lib/starter-status";
 import { cn } from "@/lib/utils";
@@ -56,23 +55,16 @@ export const Route = createFileRoute("/")({
   component: Home,
 });
 
-const rotatingWords = ["agents.", "humans.", "teams.", "you."];
-// Mirrors --color-brand in src/styles/app.css; Penflow paints a canvas and cannot read CSS tokens.
-const BRAND_COLOR = "#863bff";
-
-// ease-out-quint — snappy entrance, settles naturally (Emil Kowalski's animation principles)
-const EASE_OUT: [number, number, number, number] = [0.23, 1, 0.32, 1];
-
 const features: { icon: IconSvgElement; title: string; desc: string }[] = [
   {
     icon: CancelCircleIcon,
-    title: "No useEffect",
-    desc: "Banned in every import shape, with no inline escape hatch. Agents and developers use useMountEffect for mount-only sync\u2009\u2014\u2009no race conditions, no infinite loops, no implicit control flow.",
+    title: "React checks",
+    desc: "React lint rules catch missing dependencies, conditional hooks, and state derived through effects. Agent docs explain when to use effects, event handlers, and route loaders.",
   },
   {
     icon: AiBookIcon,
     title: "Progressive agent docs",
-    desc: "AGENTS.md stays a short entry point. Domain language, decisions, and detailed guidance load only when relevant\u2009\u2014\u2009keeping context windows small and agents focused.",
+    desc: "AGENTS.md links to focused guides for routing, React, testing, and the toolchain. Agents can read the guide that applies to the change.",
   },
   {
     icon: Shield01Icon,
@@ -103,11 +95,11 @@ const loop: { when: string; what: string }[] = [
   },
   {
     when: "on commit",
-    what: "Staged files are formatted, linted type-aware, and scanned by React Doctor. Bad code never enters history.",
+    what: "Staged files are formatted and checked for lint and type errors. React Doctor adds advisory feedback before the commit.",
   },
   {
     when: "on push",
-    what: "The cached graph runs format, lint, types, unit tests, build, dead-code analysis, then Playwright end-to-end. What lands on main is green.",
+    what: "The checks run formatting, lint, types, unit tests, a production build, dead-code analysis, and Playwright browser tests. A failing check blocks the push.",
   },
 ];
 
@@ -119,123 +111,6 @@ const stack = [
   { name: "shadcn/ui", href: "https://ui.shadcn.com" },
   { name: "Nitro", href: "https://nitro.build" },
 ];
-
-// Polls the Penflow canvas to detect when the drawing animation finishes.
-// Samples a horizontal strip of alpha values; once they stabilise for a few
-// consecutive reads the animation is considered complete.
-function usePenflowComplete(ref: React.RefObject<HTMLDivElement | null>, disabled: boolean) {
-  const [done, setDone] = useState(disabled);
-
-  useMountEffect(() => {
-    if (disabled) {
-      setDone(true);
-      return undefined;
-    }
-
-    let id: number;
-    let fallbackId: number;
-    let prev = 0;
-    let stable = 0;
-    let started = false;
-
-    function check() {
-      const canvas = ref.current?.querySelector("canvas");
-      if (!canvas) {
-        id = window.setTimeout(check, 50);
-        return;
-      }
-      const ctx = canvas.getContext("2d");
-      if (!ctx) return;
-
-      const row = ctx.getImageData(0, Math.floor(canvas.height * 0.5), canvas.width, 1).data;
-      let sum = 0;
-      for (let i = 3; i < row.length; i += 4) sum += row[i];
-
-      if (sum > 0) started = true;
-      if (started && sum === prev) stable++;
-      else stable = 0;
-      prev = sum;
-
-      if (stable >= 3) {
-        window.clearTimeout(fallbackId);
-        setDone(true);
-        return;
-      }
-      id = window.setTimeout(check, 80);
-    }
-
-    id = window.setTimeout(check, 100);
-    fallbackId = window.setTimeout(() => setDone(true), 3200);
-    return () => {
-      window.clearTimeout(id);
-      window.clearTimeout(fallbackId);
-    };
-  });
-
-  return done;
-}
-
-// typr.js (penflow dep) references `window` at import time — dynamic import avoids SSR crash
-type PenflowComponent = (typeof import("penflow/react"))["Penflow"];
-
-function useClientPenflow() {
-  const [Comp, setComp] = useState<PenflowComponent | null>(null);
-  const [failed, setFailed] = useState(false);
-
-  useMountEffect(() => {
-    let cancelled = false;
-    // Treat a hung import as a failure so the brand never stays blank
-    const timeoutId = window.setTimeout(() => setFailed(true), 4000);
-
-    void (async () => {
-      try {
-        const mod = await import("penflow/react");
-        if (!cancelled) {
-          window.clearTimeout(timeoutId);
-          setFailed(false);
-          setComp(() => mod.Penflow);
-        }
-      } catch {
-        if (!cancelled) setFailed(true);
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-      window.clearTimeout(timeoutId);
-    };
-  });
-
-  return { Comp, failed };
-}
-
-function useRotatingWord(words: string[], intervalMs = 2000) {
-  const [index, setIndex] = useState(0);
-
-  useMountEffect(() => {
-    let id: number;
-
-    function start() {
-      id = window.setInterval(() => {
-        setIndex((prev) => (prev + 1) % words.length);
-      }, intervalMs);
-    }
-
-    function handleVisibility() {
-      window.clearInterval(id);
-      if (!document.hidden) start();
-    }
-
-    start();
-    document.addEventListener("visibilitychange", handleVisibility);
-    return () => {
-      window.clearInterval(id);
-      document.removeEventListener("visibilitychange", handleVisibility);
-    };
-  });
-
-  return words[index];
-}
 
 type StarterStatus = Awaited<ReturnType<typeof loadStarterStatus>>;
 
@@ -283,12 +158,6 @@ function StarterStatusCard({ starterStatus }: { starterStatus: StarterStatus }) 
 function Home() {
   const starterStatus = Route.useLoaderData();
   const prefersReducedMotion = usePrefersReducedMotion();
-  const skip = prefersReducedMotion;
-  const currentWord = useRotatingWord(rotatingWords, 2500);
-  const { Comp: Penflow, failed: penflowFailed } = useClientPenflow();
-  const penflowRef = useRef<HTMLDivElement>(null);
-  const penflowDone = usePenflowComplete(penflowRef, skip || penflowFailed);
-  const showContent = skip || penflowFailed || penflowDone;
 
   return (
     <LazyMotion features={() => import("motion/react").then((mod) => mod.domAnimation)}>
@@ -297,66 +166,26 @@ function Home() {
         <section className="flex min-h-dvh flex-col justify-center px-6 sm:px-10">
           <div className="mx-auto w-full max-w-2xl">
             {/* Brand */}
-            <div ref={penflowRef} className="-ml-12 h-[172px]">
-              {/* Hidden until Penflow fails so the static text never flashes
-                  before the canvas animation; stays in the DOM for SSR,
-                  screen readers, and search engines */}
-              {!Penflow && (
-                <div
-                  className={cn(
-                    "pt-3 pl-12 font-[Yellowtail] text-[128px] leading-none text-brand transition-opacity duration-300",
-                    penflowFailed ? "opacity-100" : "opacity-0",
-                  )}
-                >
-                  Rodeo
-                </div>
-              )}
-              {Penflow && (
-                <Penflow
-                  text="Rodeo"
-                  fontUrl="/fonts/Yellowtail-Regular.ttf"
-                  color={BRAND_COLOR}
-                  size={128}
-                  brushScale={0.12}
-                  quality="calm"
-                  seed="rodeo"
-                  animate={!skip}
-                />
-              )}
-            </div>
+            <Wordmark animate={!prefersReducedMotion} />
 
             {/* Tagline */}
-            <m.h1
-              className="mt-4 text-[clamp(1.5rem,4vw,2.25rem)] leading-[1.2] font-bold tracking-[-0.03em] text-foreground"
-              initial={skip ? false : { opacity: 0, y: 16 }}
-              animate={showContent ? { opacity: 1, y: 0 } : { opacity: 0, y: 16 }}
-              transition={{ duration: 0.4, delay: 0.1, ease: EASE_OUT }}
-            >
+            <h1 className="mt-4 text-[clamp(1.5rem,4vw,2.25rem)] leading-[1.2] font-bold tracking-[-0.03em] text-foreground">
               Built for{" "}
-              <Calligraph as="span" className="text-brand" animation="smooth" trend={1}>
-                {currentWord}
-              </Calligraph>
-            </m.h1>
+              {prefersReducedMotion ? (
+                <span className="text-brand">agents.</span>
+              ) : (
+                <RotatingWord />
+              )}
+            </h1>
 
             {/* Description */}
-            <m.p
-              className="mt-3 max-w-md text-[15px] leading-[1.65] text-pretty text-muted-foreground"
-              initial={skip ? false : { opacity: 0, y: 16 }}
-              animate={showContent ? { opacity: 1, y: 0 } : { opacity: 0, y: 16 }}
-              transition={{ duration: 0.4, delay: 0.25, ease: EASE_OUT }}
-            >
-              Agents move fast and break things. Rodeo catches it before it
-              ships&#x2009;&#x2014;&#x2009;every edit formatted, every commit linted, every push
-              tested end-to-end. Free and open source.
-            </m.p>
+            <p className="mt-3 max-w-md text-[15px] leading-[1.65] text-pretty text-muted-foreground">
+              A React starter with formatting, lint checks, and tests wired into Git hooks. Includes
+              routing, server rendering, and agent docs. Free and open source.
+            </p>
 
             {/* Actions */}
-            <m.div
-              className="mt-10"
-              initial={skip ? false : { opacity: 0, y: 16 }}
-              animate={showContent ? { opacity: 1, y: 0 } : { opacity: 0, y: 16 }}
-              transition={{ duration: 0.4, delay: 0.4, ease: EASE_OUT }}
-            >
+            <div className="mt-10">
               <Snippet text="npx degit quinnsprouse/rodeo my-app" shimmer className="w-full" />
 
               <div className="mt-5 flex items-center gap-5">
@@ -383,7 +212,7 @@ function Home() {
                   Docs
                 </a>
               </div>
-            </m.div>
+            </div>
           </div>
         </section>
 
@@ -392,11 +221,10 @@ function Home() {
           <div className="mx-auto w-full max-w-2xl px-6 pt-20 pb-24 sm:px-10">
             <p className="mb-3 text-sm text-muted-foreground">The feedback loop</p>
             <h2 className="max-w-md text-xl leading-snug font-bold tracking-[-0.02em] text-foreground">
-              Your agent gets caught before you do.
+              Check changes before they reach main.
             </h2>
             <p className="mt-3 max-w-md text-[15px] leading-[1.65] text-pretty text-muted-foreground">
-              Every mistake is caught by the layer closest to it, so feedback arrives while the
-              agent still has context to fix it.
+              Run focused checks while editing, then build and test the app before pushing.
             </p>
 
             <TerminalDemo className="mt-10" />

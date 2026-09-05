@@ -4,6 +4,7 @@ export default {
   // Vite+ is not a stock Vite/Vitest package, so make its executable surfaces explicit.
   entry: [
     ".claude/hooks/*.mjs",
+    ".codex/hooks/*.{mjs,test.ts}",
     // Loaded by string specifier from vite.config.ts and doctor.config.ts
     "lint/rules.js",
     "e2e/**/*.ts",

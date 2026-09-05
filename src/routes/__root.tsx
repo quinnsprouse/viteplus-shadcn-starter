@@ -8,7 +8,7 @@ import { createSiteHead } from "@/config/site";
 import appCss from "@/styles/app.css?url";
 
 const GOOGLE_FONTS_URL =
-  "https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=JetBrains+Mono:wght@400;500&family=Yellowtail&display=swap";
+  "https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=JetBrains+Mono:wght@400;500&display=swap";
 export const Route = createRootRoute({
   head: () => {
     const siteHead = createSiteHead("/");
@@ -32,7 +32,7 @@ export const Route = createRootRoute({
         },
         { rel: "preconnect", href: "https://fonts.googleapis.com" },
         { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-        { rel: "preload", href: GOOGLE_FONTS_URL, as: "style" },
+        { rel: "stylesheet", href: GOOGLE_FONTS_URL },
         { rel: "stylesheet", href: appCss },
       ],
     };

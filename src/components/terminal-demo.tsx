@@ -19,13 +19,9 @@ const lines: { kind: LineKind; text: string }[] = [
   { kind: "ok", text: "check — fmt · lint · types · unit tests" },
   { kind: "ok", text: "build + knip — production-ready, no dead code" },
   { kind: "ok", text: "playwright — 4 e2e passed (7.2s)" },
-  { kind: "note", text: "shipped. nothing broken." },
+  { kind: "note", text: "checks passed. ready to push." },
 ];
 
-/**
- * A mock terminal replaying the guardrail loop that runs on every commit and
- * push. Lines stagger in as the panel scrolls into view.
- */
 export function TerminalDemo({ className }: { className?: string }) {
   const reducedMotion = usePrefersReducedMotion();
 
@@ -49,8 +45,8 @@ export function TerminalDemo({ className }: { className?: string }) {
         {lines.map((line, i) => (
           <m.div
             key={line.text}
-            initial={reducedMotion ? false : { opacity: 0, y: 6, filter: "blur(2px)" }}
-            whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+            initial={reducedMotion ? false : { opacity: 0, y: 6 }}
+            whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-80px" }}
             transition={{ duration: 0.35, delay: i * 0.09, ease: EASE_OUT }}
             className={cn(
